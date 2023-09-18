@@ -36,7 +36,7 @@ void WindowApp::Run()
 
         {
             Timer lastFrameTimer(m_lastFrameTime);
-            RunIter(m_lastIterTime.GetSeconds(), m_lastFrameTime.GetSeconds());
+            RunFrame(m_lastIterTime.GetSeconds(), m_lastFrameTime.GetSeconds());
         }
 
         defaultFramebuffer.SwapBuffers();

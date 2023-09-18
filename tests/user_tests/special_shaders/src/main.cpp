@@ -109,7 +109,7 @@ public:
         m_light.attenuationQuad = 3;
     }
 
-    void RunIter(f64 lastIterTime, f64 lastFrameTime) override {
+    void RunFrame(f64 lastIterTime, f64 lastFrameTime) override {
         DefaultFramebuffer& defaultFramebuffer = context().GetDefaultFramebuffer();
         defaultFramebuffer.SetSwapWaitInterval(1);
         
@@ -260,7 +260,7 @@ int main(int, char**) {
     WindowAppConfig appConfig = {
         ivec2(1200,800),
         "special shaders test",
-        ExecutionTypes::LimitedFrames(60)
+        ExecutionTypes::VsyncFrames()
     };
     Application app(appConfig);
     app.Run();

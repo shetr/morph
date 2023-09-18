@@ -31,7 +31,7 @@ public:
     void Run() override;
 protected:
     // times are in seconds
-    virtual void RunIter(f64 lastIterTime, f64 lastFrameTime) = 0;
+    virtual void RunFrame(f64 lastIterTime, f64 lastFrameTime) = 0;
 
     inline void SetShouldClose() { m_shouldClose = true; }
 

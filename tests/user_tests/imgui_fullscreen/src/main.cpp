@@ -129,7 +129,7 @@ public:
 
 public:
 
-    void RunIter(f64 lastIterTime, f64 lastFrameTime) override {
+    void RunFrame(f64 lastIterTime, f64 lastFrameTime) override {
         float deltaTime = 1.0f / ImGui::GetIO().Framerate;
         float aspectRatio = (float) m_sceneTextureSize.x / (float) m_sceneTextureSize.y;
         mat4 V;

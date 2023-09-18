@@ -105,7 +105,7 @@ public:
 
 public:
 
-    void RunIter(f64 lastIterTime, f64 lastFrameTime) override {
+    void RunFrame(f64 lastIterTime, f64 lastFrameTime) override {
         DefaultFramebuffer& defaultFramebuffer = context().GetDefaultFramebuffer();
         FramebufferBinder framebufferBinder = context().BindFramebuffer(defaultFramebuffer);
 

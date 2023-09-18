@@ -3,7 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include <Morph.hpp>
-#include <Window/WindowManager.hpp>
+#include <Window/Manager.hpp>
 
 namespace Morph {
 

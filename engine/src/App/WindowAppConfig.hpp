@@ -43,13 +43,13 @@ struct WindowAppConfig
 {
     ivec2 size = ivec2(1200,800);
     string title = "";
-    ExecutionTypeVar executionType = ExecutionTypes::LimitedFrames();
+    ExecutionTypeVar executionType = ExecutionTypes::VsyncFrames();
     WindowHints hints;
 
     WindowAppConfig CreateOffscreen(
         ivec2 _size = ivec2(1200,800), 
         string _title = "",
-        ExecutionTypeVar _executionType = ExecutionTypes::LimitedFrames())
+        ExecutionTypeVar _executionType = ExecutionTypes::VsyncFrames())
     {
         return {_size, _title, _executionType, WindowHints({WindowBoolHint(WindowBoolSetting::VISIBLE, false)})};
     }

@@ -115,7 +115,7 @@ public:
         m_light.attenuationQuad = 3;
     }
 
-    void RunIter(f64 lastIterTime, f64 lastFrameTime) override {
+    void RunFrame(f64 lastIterTime, f64 lastFrameTime) override {
         DefaultFramebuffer& defaultFramebuffer = context().GetDefaultFramebuffer();
         defaultFramebuffer.SetSwapWaitInterval(1);
         
