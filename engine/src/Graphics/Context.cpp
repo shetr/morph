@@ -72,9 +72,9 @@ Result<GraphicsContext*, MakeCurrentError> GraphicsContext::MakeCurrent(const Wi
         
         #ifdef MORPH_DEBUG
             spdlog::debug("OpenGL Info:");
-            spdlog::debug("  Vendor: {0}", glGetString(GL_VENDOR));
-            spdlog::debug("  Renderer: {0}", glGetString(GL_RENDERER));
-            spdlog::debug("  Version: {0}", glGetString(GL_VERSION));
+            spdlog::debug("  Vendor: {0}", (const char*)glGetString(GL_VENDOR));
+            spdlog::debug("  Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+            spdlog::debug("  Version: {0}", (const char*)glGetString(GL_VERSION));
             int versionMajor;
             int versionMinor;
             GL(GetIntegerv(GL_MAJOR_VERSION, &versionMajor));

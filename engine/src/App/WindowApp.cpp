@@ -117,7 +117,7 @@ void WindowApp::UpdateExecutionType()
 
 void WindowApp::OnWindowManagerError(const WindowManagerError& error)
 {
-    spdlog::error("{}: {}", error.type, error.message);
+    spdlog::error("{}: {}", enum_name(error.type), error.message);
 }
 
 }
