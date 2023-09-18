@@ -1,18 +1,20 @@
 
-# Morph Engine
+# Morph Engine 2
+
+Continuation of work on Morp Engine originally from https://gitlab.com/shetr/morphengine.git
 
 ## Build
 
 Clone project with submodules:
 
 ```bash
-git clone --recursive --depth=1 https://gitlab.com/shetr/morphengine.git
+git clone --recursive --depth=1 https://github.com/shetr/morph.git
 ```
 
 Or update submodules after clone:
 
 ```bash
-git clone --depth=1 https://gitlab.com/shetr/morphengine.git
+git clone --depth=1 https://github.com/shetr/morph.git
 git submodule update --init --recursive
 ```
 
