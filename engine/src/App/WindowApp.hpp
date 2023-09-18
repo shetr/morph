@@ -30,7 +30,7 @@ public:
     WindowApp(const WindowAppConfig& config);
     void Run() override;
 protected:
-    // times are in seconds
+    // times are in seconds, lastFrameTime is time of this function (RunFrame), lastIterTime contains time of the outer cycle with waiting etc.
     virtual void RunFrame(f64 lastIterTime, f64 lastFrameTime) = 0;
 
     inline void SetShouldClose() { m_shouldClose = true; }
