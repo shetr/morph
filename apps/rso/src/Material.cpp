@@ -7,7 +7,7 @@ vec3 Material::BRDF(const vec3 &N, const vec3 &V, const vec3 &L)
     vec3 brdf(0, 0, 0);
     double cosThetaL = dot(N, L);
     double cosThetaV = dot(N, V);
-    if (cosThetaL <= epsilon || cosThetaV <= epsilon)
+    if (cosThetaL <= Globals::epsilon || cosThetaV <= epsilon)
         return brdf;
     brdf = diffuseAlbedo / M_PI; // diffuse part
     vec3 R = N * (dot(N, L) * 2.0) - L;
