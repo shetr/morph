@@ -1,5 +1,7 @@
 #include "Material.hpp"
 
+#include "Globals.hpp"
+
 vec3 Material::BRDF(const vec3 &N, const vec3 &V, const vec3 &L)
 {
     vec3 brdf(0, 0, 0);
