@@ -192,7 +192,7 @@ void Scene::render()
             color = trace(camera.getRay(X, Y));
             }
             double w = 1.0 / iIter; // the same weight for all samples for computing mean incrementally
-            Globals::image[Y * Globals::screenWidth + X] = color * w + Globals::image[Y * Globals::screenWidth + X] * (1.0 - w);
+            Globals::image[Y * Globals::screenWidth + X] = color * w + dvec3(Globals::image[Y * Globals::screenWidth + X]) * (1.0 - w);
 
             w = 1.0 / sqrt(iIter); // emphasize later samples
             dvec3 diff = Globals::reference[Y * Globals::screenWidth + X] - Globals::image[Y * Globals::screenWidth + X];

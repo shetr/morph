@@ -29,6 +29,8 @@ private:
     Scene m_scene;
     JobManager m_jobManager;
 
+    GraphicsSettings m_graphicsSettings;
+    GraphicsSettingsApplier m_graphicsSettingsApplier;
     ResourceStorage m_resStorage;
     GraphicsProgramCompiler m_progCompiler;
     CommonResources m_commonResources;

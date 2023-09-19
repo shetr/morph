@@ -23,7 +23,7 @@ void getPseudocolorCoolWarm(double val, double minVal, double maxVal, double &r,
 
 Image ReadHDR(const char* filename);
 
-void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, bool psf = false);
+void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf = false);
 
 void SaveTGA();
 

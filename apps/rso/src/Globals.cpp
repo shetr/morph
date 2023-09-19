@@ -34,18 +34,18 @@ const float Globals::pscols[4 * 33] = { // 33 colors RGB
 };
 int Globals::screenWidth = 600;
 int Globals::screenHeight = 600;
-std::vector<dvec3> Globals::image;
-std::vector<dvec3> Globals::testImage;
-std::vector<dvec3> Globals::reference;
-std::vector<double> Globals::weight;
+std::vector<vec3> Globals::image;
+std::vector<vec3> Globals::testImage;
+std::vector<vec3> Globals::reference;
+std::vector<float> Globals::weight;
 
 void Globals::resize_image(int _screenWidth, int _screenHeight)
 {
     screenWidth = _screenWidth;
     screenHeight = _screenHeight;
-    image.assign(screenWidth * screenHeight, dvec3(0));
-    testImage.assign(screenWidth * screenHeight, dvec3(0));
-    reference.assign(screenWidth * screenHeight, dvec3(0));
+    image.assign(screenWidth * screenHeight, vec3(0));
+    testImage.assign(screenWidth * screenHeight, vec3(0));
+    reference.assign(screenWidth * screenHeight, vec3(0));
     weight.assign(screenWidth * screenHeight, 0);
 }
 

@@ -146,7 +146,7 @@ Image ReadHDR(const char* filename)
     return {image, width, height};
 }
 
-void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, bool psf)
+void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf)
 {
   FILE *fp;
   fp = fopen(filename, "wb");

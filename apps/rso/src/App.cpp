@@ -8,6 +8,15 @@ Application::Application(const WindowAppConfig& config)
     m_windowSizeEventAttacher(&windowManager(), this, &Application::OnWindowSizeEvent),
     m_keyEventAttacher(&windowManager(), this, &Application::OnKeyEvent),
     m_scrollEventAttacher(&windowManager(), this, &Application::OnScrollEvent),
+    m_graphicsSettings({
+        MultisampleEnabledSetting(true),
+        DepthTestEnabledSetting(true),
+        CullFaceEnabledSetting(true),
+        CullFaceSetting(CullFaceType::BACK),
+        FrontFaceSetting(FrontFaceType::CCW),
+        ClearColorSetting(0)
+    }),
+    m_graphicsSettingsApplier(context().ApplySettings(m_graphicsSettings)),
     m_resStorage(unord_map<string, string>({{"engine", MORPH_ENGINE_RES}, {"app", MORPH_APP_RES}})),
     m_progCompiler(context(), m_resStorage),
     m_commonResources(context(), m_resStorage, m_progCompiler),
@@ -29,7 +38,10 @@ Application::Application(const WindowAppConfig& config)
 
 void Application::RunFrame(f64 lastIterTime, f64 lastFrameTime)
 {
+    m_screenTexture.Update(Globals::image.data());
     FramebufferBinder framebufferBinder = context().BindFramebuffer(context().GetDefaultFramebuffer());
+    framebufferBinder.Clear();
+    context().SetViewport(context().GetDefaultFramebuffer().dim());
     RenderProgramBinder programBinder = context().BindProgram(m_commonResources.ScreenFillProgram());
     TextureUnitBinder textureUnitBinder = context().BindTextureUnit(m_screenTextureSamplerUnit, m_screenTexture);
     m_screenTextureSamplerUniform.Set(programBinder);

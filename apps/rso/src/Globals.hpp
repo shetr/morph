@@ -6,6 +6,7 @@
 
 //using namespace glm;
 using dvec3 = glm::dvec3;
+using vec3 = glm::vec3;
 using glm::clamp;
 
 // Which sampling method should be used
@@ -49,10 +50,10 @@ public:
     static const float pscols[4 * 33];
     static int screenWidth;
     static int screenHeight;
-    static std::vector<dvec3> image;
-    static std::vector<dvec3> testImage;
-    static std::vector<dvec3> reference;
-    static std::vector<double> weight;
+    static std::vector<vec3> image;
+    static std::vector<vec3> testImage;
+    static std::vector<vec3> reference;
+    static std::vector<float> weight;
 
     static void resize_image(int _screenWidth, int _screenHeight);
 
