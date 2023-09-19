@@ -6,8 +6,8 @@
 // Structure for a ray
 struct Ray
 {
-  dvec3 start;
-  dvec3 dir;
+  dvec3 start = dvec3(0);
+  dvec3 dir = dvec3(0);
   Ray(const dvec3 &_start, const dvec3 &_dir)
   {
     start = _start;
@@ -21,8 +21,8 @@ class Intersectable;
 struct Hit
 {
   double t;
-  dvec3 position;
-  dvec3 normal;
+  dvec3 position = dvec3(0);
+  dvec3 normal = dvec3(0);
   Material *material;
   Intersectable *object;
   Hit() { t = -1; }

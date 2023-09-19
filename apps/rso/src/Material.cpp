@@ -30,7 +30,7 @@ bool Material::sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L)
         double u = Globals::drandom(), v = Globals::drandom();
         double theta = asin(sqrt(u)), phi = M_PI * 2.0 * v;
         dvec3 O = cross(N, dvec3(1, 0, 0));
-        if (O.length() < Globals::epsilon) O = cross(N, dvec3(0, 0, 1));
+        if (length(O) < Globals::epsilon) O = cross(N, dvec3(0, 0, 1));
         dvec3 P = cross(N, O);
         L = N * cos(theta) + O * sin(theta) * cos(phi) + P * sin(theta) * sin(phi);
         return true;
@@ -40,7 +40,7 @@ bool Material::sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L)
         double cos_ang_V_R = pow(u, 1.0 / (shininess + 1.0));
         double sin_ang_V_R = sqrt(1.0 - cos_ang_V_R * cos_ang_V_R);
         dvec3 O = cross(V, dvec3(1, 0, 0));
-        if (O.length() < Globals::epsilon) O = cross(N, dvec3(0, 0, 1));
+        if (length(O) < Globals::epsilon) O = cross(N, dvec3(0, 0, 1));
         O = normalize(O);
         dvec3 P = cross(V, O);
         dvec3 R = O * sin_ang_V_R * cos(2.0 * M_PI * v) +

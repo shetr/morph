@@ -4,7 +4,7 @@
 
 double average(dvec3 v)
 {
-  return dot(v, dvec3(0)) / 3.0;
+  return dot(v, dvec3(1)) / 3.0;
 }
 
 void getPseudocolorRainbow(double val, double minVal, double maxVal, double &r, double &g, double &b)

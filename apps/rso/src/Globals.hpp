@@ -31,6 +31,8 @@ private:
 class Globals
 {
 public:
+    static float gamma;
+    static float exposure;
     static const double epsilon;
     static const int rainbowPSC;    // 0 .. use CoolWarm mapping, 1 .. use rainbow color mapping
     static const int showBargraph;  // 0/1 .. dont use/use bargraph on the right for color mapping
@@ -51,6 +53,7 @@ public:
     static int screenWidth;
     static int screenHeight;
     static std::vector<vec3> image;
+    static std::vector<vec3> ldrImage;
     static std::vector<vec3> testImage;
     static std::vector<vec3> reference;
     static std::vector<float> weight;

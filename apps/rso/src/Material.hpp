@@ -6,10 +6,10 @@
 // The definition of material surface (BRDF + emission)
 struct Material
 {
-  dvec3 Le;             // the emmited power
-  dvec3 diffuseAlbedo;  // albedo for diffuse component
-  dvec3 specularAlbedo; // albedo for specular component
-  double shininess;
+  dvec3 Le = dvec3(0);             // the emmited power
+  dvec3 diffuseAlbedo = dvec3(0);  // albedo for diffuse component
+  dvec3 specularAlbedo = dvec3(0); // albedo for specular component
+  double shininess = 0;
 
   Material() { shininess = 0; }
 

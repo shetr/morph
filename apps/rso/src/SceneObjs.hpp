@@ -7,22 +7,26 @@
 class Rect : public Intersectable
 {
   // anchor point, normal,
-  dvec3 r0, normal, right, forward;
-  double width, height; // size
+  dvec3 r0 = dvec3(0);
+  dvec3 normal = dvec3(0);
+  dvec3 right = dvec3(0);
+  dvec3 forward = dvec3(0);
+  double width = 0;
+  double height = 0; // size
 public:
   Rect(dvec3 _r0, dvec3 _r1, dvec3 _r2, double _width, double _height, Material *mat);
 
   Rect(double _size, Material *mat);
 
   // Compute intersection between a ray and the rectangle
-  Hit intersect(const Ray &ray);
+  virtual Hit intersect(const Ray &ray) override;
 };
 
 // Sphere used as light source
 struct Sphere : public Intersectable
 {
-  dvec3 center;
-  double radius;
+  dvec3 center = dvec3(0);
+  double radius = 0;
 
   Sphere(const dvec3 &cent, double rad, Material *mat, bool emit = true, const double targetPower = 60);
 

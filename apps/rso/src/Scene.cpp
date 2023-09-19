@@ -10,7 +10,7 @@ void Camera::set(const dvec3 &_eye, const dvec3 &_lookat, const dvec3 &_vup, dou
     eye = _eye;
     lookat = _lookat;
     dvec3 w = eye - lookat;
-    double f = w.length();
+    double f = length(w);
     right = normalize(cross(_vup, w)) * f * tan(fov / 2);
     up = normalize(cross(w, right)) * f * tan(fov / 2);
 }
@@ -185,7 +185,7 @@ void Scene::render()
             cost += nBRDFSamples * Globals::costBRDF + nLightSamples * Globals::costLight;
 
             // For a primary ray at pixel (X,Y) compute the color
-            dvec3 color;
+            dvec3 color = dvec3(0);
             if (Globals::method == PATH_TRACING) {
             color = pathTrace(camera.getRay(X, Y));
             } else {
@@ -193,6 +193,13 @@ void Scene::render()
             }
             double w = 1.0 / iIter; // the same weight for all samples for computing mean incrementally
             Globals::image[Y * Globals::screenWidth + X] = color * w + dvec3(Globals::image[Y * Globals::screenWidth + X]) * (1.0 - w);
+
+            // map HDR to LDR
+            vec3 hdrColor = Globals::image[Y * Globals::screenWidth + X];
+            vec3 mapped = vec3(1.0) - exp(-hdrColor * Globals::exposure);
+            // gamma correction 
+            mapped = pow(mapped, vec3(1.0 / Globals::gamma));
+            Globals::ldrImage[Y * Globals::screenWidth + X] = mapped;
 
             w = 1.0 / sqrt(iIter); // emphasize later samples
             dvec3 diff = Globals::reference[Y * Globals::screenWidth + X] - Globals::image[Y * Globals::screenWidth + X];

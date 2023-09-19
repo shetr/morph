@@ -38,7 +38,7 @@ Application::Application(const WindowAppConfig& config)
 
 void Application::RunFrame(f64 lastIterTime, f64 lastFrameTime)
 {
-    m_screenTexture.Update(Globals::image.data());
+    m_screenTexture.Update(Globals::ldrImage.data());
     FramebufferBinder framebufferBinder = context().BindFramebuffer(context().GetDefaultFramebuffer());
     framebufferBinder.Clear();
     context().SetViewport(context().GetDefaultFramebuffer().dim());
