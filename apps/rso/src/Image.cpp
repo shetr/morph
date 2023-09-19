@@ -239,3 +239,73 @@ void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, 
     }
   }
 }
+
+void SaveTGA()
+{
+  // Save TGA file for the image, simple format
+  FILE *ofile = 0;
+  switch (Globals::method)
+  {
+  case BRDF:
+    ofile = fopen("brdf.tga", "wb");
+    break;
+  case LIGHT_SOURCE:
+    ofile = fopen("lightsource.tga", "wb");
+    break;
+  case HALF_WEIGHT:
+    ofile = fopen("half_weight.tga", "wb");
+    break;
+  case MULTIPLE_IMPORTANCE:
+    ofile = fopen("multiple_importance.tga", "wb");
+    break;
+  }
+  if (!ofile)
+    return;
+
+  fputc(0, ofile);
+  fputc(0, ofile);
+  fputc(2, ofile);
+  for (int i = 3; i < 12; i++)
+  {
+    fputc(0, ofile);
+  }
+  int width = Globals::screenWidth * 2, height = Globals::screenHeight;
+  fputc(width % 256, ofile);
+  fputc(width / 256, ofile);
+  fputc(height % 256, ofile);
+  fputc(height / 256, ofile);
+  fputc(24, ofile);
+  fputc(32, ofile);
+
+  for (int Y = Globals::screenHeight - 1; Y >= 0; Y--)
+  {
+    for (int X = 0; X < width; X++)
+    {
+      double r, g, b;
+      if (X < Globals::screenWidth)
+      {
+        r = Globals::image[Y * Globals::screenWidth + X].x;
+        g = Globals::image[Y * Globals::screenWidth + X].y;
+        b = Globals::image[Y * Globals::screenWidth + X].z;
+      }
+      else
+      {
+        int XX = X - Globals::screenWidth;
+        double w = Globals::weight[Y * Globals::screenWidth + XX];
+        if (Globals::showBargraph && (XX > 0.98 * Globals::screenWidth))
+          w = (double)Y / Globals::screenHeight; // thin bar on the right showing the mapping
+        if (Globals::rainbowPSC)
+          getPseudocolorRainbow(w, 0.0, 1.0, r, g, b); // is more common but wrong perceptually
+        else
+          getPseudocolorCoolWarm(w, 0.0, 1.0, r, g, b); // is perceptually better
+      }
+      int R = fmax(fmin(r * 255.5, 255), 0);
+      int G = fmax(fmin(g * 255.5, 255), 0);
+      int B = fmax(fmin(b * 255.5, 255), 0);
+      fputc(B, ofile);
+      fputc(G, ofile);
+      fputc(R, ofile);
+    }
+  }
+  fclose(ofile);
+}

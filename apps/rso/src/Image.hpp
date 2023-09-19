@@ -25,4 +25,6 @@ Image ReadHDR(const char* filename);
 
 void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, bool psf = false);
 
+void SaveTGA();
+
 #endif // RSO_IMAGE_HPP

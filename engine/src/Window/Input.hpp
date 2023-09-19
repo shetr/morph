@@ -179,7 +179,7 @@ struct KeyEvent
     KeyAction action;
     int mods;
 
-    inline bool ModKeyPressed(ModKey modKey) {
+    inline bool ModKeyPressed(ModKey modKey) const {
         return mods & static_cast<int>(modKey);
     }
 };

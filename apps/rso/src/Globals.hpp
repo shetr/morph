@@ -50,6 +50,7 @@ public:
     static int screenWidth;
     static int screenHeight;
     static std::vector<dvec3> image;
+    static std::vector<dvec3> testImage;
     static std::vector<dvec3> reference;
     static std::vector<double> weight;
 
