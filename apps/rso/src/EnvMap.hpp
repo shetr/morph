@@ -1,3 +1,4 @@
+#pragma once
 
 struct Distribution1D
 {

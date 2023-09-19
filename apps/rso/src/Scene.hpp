@@ -1,4 +1,4 @@
-
+#pragma once
 
 // The scene definition with main rendering method
 class Scene

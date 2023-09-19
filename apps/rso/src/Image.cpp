@@ -1,5 +1,78 @@
 #include "Image.hpp"
 
+double average(dvec3 v)
+{
+  return dot(v, dvec3(0)) / 3.0;
+}
+
+void getPseudocolorRainbow(double val, double minVal, double maxVal, double &r, double &g, double &b)
+{
+  if (isnan(val) || isinf(val))
+  {
+    r = g = b = 0; // black ... exception
+    return;
+  }
+  if (val < minVal)
+    val = minVal;
+  if (val > maxVal)
+    val = maxVal;
+  double ratio = (val - minVal) / (maxVal - minVal);
+  double value = 1.0f - ratio;
+  float val4 = value * 4.0f;
+  value = val4 - (int)val4;
+  switch ((int)(val4))
+  {
+  case 0:
+    r = 1.0;
+    g = value;
+    b = 0.f;
+    break;
+  case 1:
+    r = 1.0 - value;
+    g = 1.0;
+    b = 0.f;
+    break;
+  case 2:
+    r = 0.f;
+    g = 1.0;
+    b = value;
+    break;
+  case 3:
+    r = 0.f;
+    g = 1.0 - value;
+    b = 1.0;
+    break;
+  default:
+    r = value * 1.0;
+    g = 0.f;
+    b = 1.0;
+    break;
+  }
+  return;
+}
+
+void getPseudocolorCoolWarm(double val, double minVal, double maxVal, double &r, double &g, double &b)
+{
+  if (isnan(val) || isinf(val))
+  {
+    r = g = b = 0; // black ... exception
+    return;
+  }
+  if (val < minVal)
+    val = minVal;
+  if (val > maxVal)
+    val = maxVal;
+  double ratio = (val - minVal) / (maxVal - minVal);
+  int i = int(ratio * 31.999);
+  assert(i < 33);
+  assert(i >= 0);
+  float alpha = i + 1.0 - (ratio * 31.999);
+  r = Globals::pscols[4 * i + 1] * alpha + Globals::pscols[4 * (i + 1) + 1] * (1.0 - alpha);
+  g = Globals::pscols[4 * i + 2] * alpha + Globals::pscols[4 * (i + 1) + 2] * (1.0 - alpha);
+  b = Globals::pscols[4 * i + 3] * alpha + Globals::pscols[4 * (i + 1) + 3] * (1.0 - alpha);
+  // printf("rgb=%f %f %f index=%d a=%g\n",r,g,b,i, alpha);
+}
+
 Image ReadHDR(const char* filename)
 {
     FILE *fp;
@@ -31,7 +104,7 @@ Image ReadHDR(const char* filename)
     std::vector<RGBE> data;
     data.resize(count);
 
-    std::vector<vec3> image;
+    std::vector<dvec3> image;
     image.resize(count);
 
     size_t kk = fread(data.data(), (size_t)4, count, fp);
@@ -43,7 +116,7 @@ Image ReadHDR(const char* filename)
         const RGBE& rgbe = data[i];
         int x = i % width;
         int y = flipY ? ((height - 1) - (i / width)) : (i / width);
-        vec3& col = image[x + y * width];
+        dvec3& col = image[x + y * width];
 
         int e = (int)rgbe.e - 128;
         float maxRGB = std::max(rgbe.r, std::max(rgbe.g, rgbe.b));
@@ -71,7 +144,7 @@ Image ReadHDR(const char* filename)
     return {image, width, height};
 }
 
-void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf = false)
+void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, bool psf)
 {
   FILE *fp;
   fp = fopen(filename, "wb");
@@ -88,7 +161,7 @@ void SaveHDR(const char* filename, const vec3* inImage, int width, int height, b
       RGBE &rgbe = data[ii];
       int x = (ii % width);
       int y = height - (ii / width) - 1;
-      vec3 vv;
+      dvec3 vv;
       vv = inImage[y * width + x];
       if (psf)
       {
@@ -99,10 +172,10 @@ void SaveHDR(const char* filename, const vec3* inImage, int width, int height, b
         else
         {
           x -= width;
-          double w = weight[y * width + x];
-          if (showBargraph && (x > 0.98 * width))
+          double w = Globals::weight.data()[y * width + x];
+          if (Globals::showBargraph && (x > 0.98 * width))
             w = (double)y / height; // thin bar on the right showing the mapping
-          if (rainbowPSC)
+          if (Globals::rainbowPSC)
             getPseudocolorRainbow(w, 0.0, 1.0, vv.x, vv.y, vv.z); // is more common but wrong perceptually
           else
             getPseudocolorCoolWarm(w, 0.0, 1.0, vv.x, vv.y, vv.z); // is perceptually better
