@@ -1,4 +1,7 @@
-#pragma once
+#ifndef RSO_ENVMAP_HPP
+#define RSO_ENVMAP_HPP
+
+#include "SceneObjs.hpp"
 
 struct Distribution1D
 {
@@ -32,7 +35,9 @@ struct EnvMap : public Sphere
 
   Hit intersect(const Ray &r) override;
 
-  void samplePoint(const vec3 &illuminatedPoint, vec3 &point, vec3 &normal) override;
+  void samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal) override;
 
-  double pointSampleProb(double totalPower, vec3 dir) override;
+  double pointSampleProb(double totalPower, dvec3 dir) override;
 };
+
+#endif // RSO_ENVMAP_HPP

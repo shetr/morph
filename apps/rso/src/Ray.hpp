@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RSO_RAY_HPP
+#define RSO_RAY_HPP
 
 #include "Material.hpp"
 
@@ -39,3 +40,5 @@ struct Intersectable
     return 0;
   }
 };
+
+#endif // RSO_RAY_HPP

@@ -1,9 +1,20 @@
-#pragma once
+#ifndef RSO_GLOBALS_HPP
+#define RSO_GLOBALS_HPP
 
 #include <Morph.hpp>
 #include <random>
 
 using namespace glm;
+
+// Which sampling method should be used
+enum Method
+{
+  BRDF,
+  LIGHT_SOURCE,
+  HALF_WEIGHT,
+  MULTIPLE_IMPORTANCE,
+  PATH_TRACING
+} method;
 
 class RandGen {
 public:
@@ -21,6 +32,14 @@ public:
     static const int rainbowPSC;    // 0 .. use CoolWarm mapping, 1 .. use rainbow color mapping
     static const int showBargraph;  // 0/1 .. dont use/use bargraph on the right for color mapping
 
+    static int nIterations;    // how many iterations to render
+    static int nTotalSamples; // samples in one render iteration - should be even number
+
+    // The cost of sampling - should be measured and set
+    static double costBRDF;
+    static double costLight;
+    static double referenceEfficiency;
+
     static bool useMultithreading;
     static std::vector<RandGen> randomGenerators;
     static const float pscols[4 * 33];
@@ -34,3 +53,5 @@ public:
 
     static double drandom();
 };
+
+#endif // RSO_GLOBALS_HPP

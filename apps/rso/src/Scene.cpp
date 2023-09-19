@@ -1,75 +1,95 @@
 #include "Scene.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+void Camera::set(const dvec3 &_eye, const dvec3 &_lookat, const dvec3 &_vup, double fov)
+{
+    eye = _eye;
+    lookat = _lookat;
+    dvec3 w = eye - lookat;
+    double f = w.length();
+    right = normalize(cross(_vup, w)) * f * tan(fov / 2);
+    up = normalize(cross(w, right)) * f * tan(fov / 2);
+}
+Ray Camera::getRay(int X, int Y)
+{ // X,Y - pixel coordinates, compute a primary ray
+    dvec3 dir = lookat +
+                right * (2.0 * (X + 0.5) / Globals::screenWidth - 1) +
+                up * (2.0 * (Y + 0.5) / Globals::screenHeight - 1) - eye;
+    return Ray(eye, normalize(dir));
+}
+
 void Scene::buildHw1_3Test()
 {
-    vec3 eyePos(0, 6, 18);         // camera center
-    vec3 lightCenterPos(0, 4, -6); // first light source
+    dvec3 eyePos(0, 6, 18);         // camera center
+    dvec3 lightCenterPos(0, 4, -6); // first light source
 
     // Create geometry - 4 rectangles
-    //objects.push_back(new Rect(vec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, vec3(0), vec3(1))));
-    //objects.push_back(new Rect(vec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, vec3(0), vec3(1))));
-    //objects.push_back(new Rect(vec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, vec3(0), vec3(1))));
-    //objects.push_back(new Rect(vec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, vec3(0), vec3(1))));
+    //objects.push_back(new Rect(dvec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, dvec3(0), dvec3(1))));
+    //objects.push_back(new Rect(dvec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, dvec3(0), dvec3(1))));
+    //objects.push_back(new Rect(dvec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, dvec3(0), dvec3(1))));
+    //objects.push_back(new Rect(dvec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, dvec3(0), dvec3(1))));
 
-    //objects.push_back(new Rect(vec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, vec3(1), vec3(0))));
-    //objects.push_back(new Rect(vec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, vec3(1), vec3(0))));
-    //objects.push_back(new Rect(vec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, vec3(1), vec3(0))));
-    //objects.push_back(new Rect(vec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, vec3(1), vec3(0))));
+    //objects.push_back(new Rect(dvec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, dvec3(1), dvec3(0))));
+    //objects.push_back(new Rect(dvec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, dvec3(1), dvec3(0))));
+    //objects.push_back(new Rect(dvec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, dvec3(1), dvec3(0))));
+    //objects.push_back(new Rect(dvec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, dvec3(1), dvec3(0))));
 
-    objects.push_back(new Rect(vec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, vec3(0.5), vec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, dvec3(0.5), dvec3(0.5))));
 
-    //objects.push_back(new Rect(vec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, vec3(0.1), vec3(0.9))));
-    //objects.push_back(new Rect(vec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, vec3(0.3), vec3(0.6))));
-    //objects.push_back(new Rect(vec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, vec3(0.5), vec3(0.5))));
-    //objects.push_back(new Rect(vec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, vec3(0.9), vec3(0.1))));
+    //objects.push_back(new Rect(dvec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, dvec3(0.1), dvec3(0.9))));
+    //objects.push_back(new Rect(dvec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, dvec3(0.3), dvec3(0.6))));
+    //objects.push_back(new Rect(dvec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, dvec3(0.5), dvec3(0.5))));
+    //objects.push_back(new Rect(dvec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, dvec3(0.9), dvec3(0.1))));
 
     // Create 4 light sources
-    objects.push_back(new Sphere(lightCenterPos + vec3(-4.5, 0, 0), 0.07, new LightMaterial(vec3(4, 2, 1))));
-    objects.push_back(new Sphere(lightCenterPos + vec3(-1.5, 0, 0), 0.16, new LightMaterial(vec3(2, 4, 1))));
-    objects.push_back(new Sphere(lightCenterPos + vec3(1.5, 0, 0), 0.4, new LightMaterial(vec3(2, 1, 4))));
-    objects.push_back(new Sphere(lightCenterPos + vec3(4.5, 0, 0), 1, new LightMaterial(vec3(4, 1, 2))));
+    objects.push_back(new Sphere(lightCenterPos + dvec3(-4.5, 0, 0), 0.07, new LightMaterial(dvec3(4, 2, 1))));
+    objects.push_back(new Sphere(lightCenterPos + dvec3(-1.5, 0, 0), 0.16, new LightMaterial(dvec3(2, 4, 1))));
+    objects.push_back(new Sphere(lightCenterPos + dvec3(1.5, 0, 0), 0.4, new LightMaterial(dvec3(2, 1, 4))));
+    objects.push_back(new Sphere(lightCenterPos + dvec3(4.5, 0, 0), 1, new LightMaterial(dvec3(4, 1, 2))));
 
     // Set the camera
-    camera.set(eyePos, vec3(0, 0, 0), vec3(0, 1, 0), 35.0 * M_PI / 180.0);
+    camera.set(eyePos, dvec3(0, 0, 0), dvec3(0, 1, 0), 35.0 * M_PI / 180.0);
 }
 
 void Scene::buildHw2Test(const char* hdrFilename)
 {
-    vec3 eyePos(0, 6, 18);         // camera center
-    vec3 lightCenterPos(0, 4, -6); // first light source
+    dvec3 eyePos(0, 6, 18);         // camera center
+    dvec3 lightCenterPos(0, 4, -6); // first light source
 
-    objects.push_back(new Rect(vec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, vec3(0.5), vec3(0.5))));
-    objects.push_back(new Rect(vec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, vec3(0.5), vec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -4, +2), eyePos, lightCenterPos, 8, 1, new TableMaterial(500, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -3.5, -2), eyePos, lightCenterPos, 8, 1, new TableMaterial(1000, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -2.5, -6), eyePos, lightCenterPos, 8, 1, new TableMaterial(5000, dvec3(0.5), dvec3(0.5))));
+    objects.push_back(new Rect(dvec3(0, -1, -10), eyePos, lightCenterPos, 8, 1, new TableMaterial(10000, dvec3(0.5), dvec3(0.5))));
 
-    //objects.push_back(new Sphere(lightCenterPos + vec3(0, -3, 5), 2, new TableMaterial(5000, vec3(0.5), vec3(0.5)), false));
+    //objects.push_back(new Sphere(lightCenterPos + dvec3(0, -3, 5), 2, new TableMaterial(5000, dvec3(0.5), dvec3(0.5)), false));
 
     objects.push_back(new EnvMap(hdrFilename));
 
-    camera.set(eyePos, vec3(0, 0, 0), vec3(0, 1, 0), 35.0 * M_PI / 180.0);
+    camera.set(eyePos, dvec3(0, 0, 0), dvec3(0, 1, 0), 35.0 * M_PI / 180.0);
 }
 
 void Scene::buildHw4Test(const char* hdrFilename)
 {
-    vec3 eyePos(-12, -12, 10);         // camera center
+    dvec3 eyePos(-12, -12, 10);         // camera center
 
-    objects.push_back(new Rect(16, new TableMaterial(500, vec3(0.5), vec3(0.5))));
+    objects.push_back(new Rect(16, new TableMaterial(500, dvec3(0.5), dvec3(0.5))));
 
-    objects.push_back(new Sphere(vec3(-0.5, -4, 2), 2, new TableMaterial(5000, vec3(0.05), vec3(0.9)), false));
-    objects.push_back(new Sphere(vec3(0, 0, 2), 2, new TableMaterial(5000, vec3(0, 0, 0.75), vec3(0.2)), false));
-    objects.push_back(new Sphere(vec3(-4, -0.5, 2), 2, new TableMaterial(5000, vec3(0.9, 0, 0), vec3(0.05)), false));
-    objects.push_back(new Sphere(vec3(-1, -1, 5.5), 2, new TableMaterial(5000, vec3(0.5), vec3(0.5)), false));
+    objects.push_back(new Sphere(dvec3(-0.5, -4, 2), 2, new TableMaterial(5000, dvec3(0.05), dvec3(0.9)), false));
+    objects.push_back(new Sphere(dvec3(0, 0, 2), 2, new TableMaterial(5000, dvec3(0, 0, 0.75), dvec3(0.2)), false));
+    objects.push_back(new Sphere(dvec3(-4, -0.5, 2), 2, new TableMaterial(5000, dvec3(0.9, 0, 0), dvec3(0.05)), false));
+    objects.push_back(new Sphere(dvec3(-1, -1, 5.5), 2, new TableMaterial(5000, dvec3(0.5), dvec3(0.5)), false));
 
-    objects.push_back(new Sphere(vec3(-2, -2, 8), 1, new LightMaterial(vec3(4, 1, 2))));
-    objects.push_back(new Sphere(vec3(-5, 0, 5), 0.4, new LightMaterial(vec3(2, 1, 4))));
+    objects.push_back(new Sphere(dvec3(-2, -2, 8), 1, new LightMaterial(dvec3(4, 1, 2))));
+    objects.push_back(new Sphere(dvec3(-5, 0, 5), 0.4, new LightMaterial(dvec3(2, 1, 4))));
 
     objects.push_back(new EnvMap(hdrFilename));
 
-    camera.set(eyePos, vec3(0, 0, 0), vec3(0, 0, 1), 35.0 * M_PI / 180.0);
+    camera.set(eyePos, dvec3(0, 0, 0), dvec3(0, 0, 1), 35.0 * M_PI / 180.0);
 }
 
 void Scene::build(const char* hdrFilename)
@@ -93,9 +113,9 @@ void Scene::build(const char* hdrFilename)
 
 void Scene::setWeight(double wval)
 {
-    for (int Y = 0; Y < screenHeight; Y++)
-        for (int X = 0; X < screenWidth; X++)
-        weight[Y * screenWidth + X] = wval;
+    for (int Y = 0; Y < Globals::screenHeight; Y++)
+        for (int X = 0; X < Globals::screenWidth; X++)
+        Globals::weight[Y * Globals::screenWidth + X] = wval;
 }
 
 void Scene::render()
@@ -114,14 +134,14 @@ void Scene::render()
     switch (method)
     {
     case BRDF:
-        nBRDFSamples = nTotalSamples;
+        nBRDFSamples = Globals::nTotalSamples;
         nLightSamples = 0;
         errorFile = fopen("BRDF.txt", "w");
         setWeight(0);
         break;
     case LIGHT_SOURCE:
         nBRDFSamples = 0;
-        nLightSamples = nTotalSamples;
+        nLightSamples = Globals::nTotalSamples;
         errorFile = fopen("light.txt", "w");
         setWeight(1.0);
         break;
@@ -144,36 +164,36 @@ void Scene::render()
     double cost = 0;
     bool debug = false;
     // How many iterations
-    for (int iIter = 1; iIter <= nIterations; iIter++)
+    for (int iIter = 1; iIter <= Globals::nIterations; iIter++)
     {
         double error = 0;
-        for (int Y = 0; Y < screenHeight; Y++)
+        for (int Y = 0; Y < Globals::screenHeight; Y++)
         { // for all rows
         printf("%d\r", Y);
-        for (int X = 0; X < screenWidth; X++)
+        for (int X = 0; X < Globals::screenWidth; X++)
         { // for all pixels in a row
             if (debug)
             { // debug particular pixel x,y, coordinates from pfsv (pfstools)
             X = 441;
-            Y = screenHeight - 529;
+            Y = Globals::screenHeight - 529;
             }
 
-            nLightSamples = (int)(weight[Y * screenWidth + X] * nTotalSamples + 0.5);
-            nBRDFSamples = nTotalSamples - nLightSamples;
-            cost += nBRDFSamples * costBRDF + nLightSamples * costLight;
+            nLightSamples = (int)(Globals::weight[Y * Globals::screenWidth + X] * Globals::nTotalSamples + 0.5);
+            nBRDFSamples = Globals::nTotalSamples - nLightSamples;
+            cost += nBRDFSamples * Globals::costBRDF + nLightSamples * Globals::costLight;
 
             // For a primary ray at pixel (X,Y) compute the color
-            vec3 color;
+            dvec3 color;
             if (method == PATH_TRACING) {
             color = pathTrace(camera.getRay(X, Y));
             } else {
             color = trace(camera.getRay(X, Y));
             }
             double w = 1.0 / iIter; // the same weight for all samples for computing mean incrementally
-            image[Y * screenWidth + X] = color * w + image[Y * screenWidth + X] * (1.0 - w);
+            Globals::image[Y * Globals::screenWidth + X] = color * w + Globals::image[Y * Globals::screenWidth + X] * (1.0 - w);
 
             w = 1.0 / sqrt(iIter); // emphasize later samples
-            vec3 diff = reference[Y * screenWidth + X] - image[Y * screenWidth + X];
+            dvec3 diff = Globals::reference[Y * Globals::screenWidth + X] - Globals::image[Y * Globals::screenWidth + X];
             error += dot(diff, diff);
             if (debug)
             break;
@@ -181,10 +201,10 @@ void Scene::render()
         if (debug)
             break;
         } // for Y
-        double eff = 100000.0 * nIterations * nTotalSamples * screenWidth * screenHeight / error / cost;
+        double eff = 100000.0 * Globals::nIterations * Globals::nTotalSamples * Globals::screenWidth * Globals::screenHeight / error / cost;
         printf("Iter: %d, Error: %4.2f, Efficiency: %f, Relative Efficiency: %f\n",
-                iIter, sqrt(error), eff, eff / referenceEfficiency);
-        fprintf(errorFile, "%d, %f\n", iIter * nTotalSamples, sqrt(error));
+                iIter, sqrt(error), eff, eff / Globals::referenceEfficiency);
+        fprintf(errorFile, "%d, %f\n", iIter * Globals::nTotalSamples, sqrt(error));
     } // for iTer
     fclose(errorFile);
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -200,7 +220,7 @@ Hit Scene::firstIntersect(const Ray &ray, Intersectable *skip)
         if (objects[i] == skip)
         continue;
         Hit hit = objects[i]->intersect(ray); //  hit.t < 0 if no intersection
-        if (hit.t > epsilon)
+        if (hit.t > Globals::epsilon)
         {
         if (bestHit.t < 0 || hit.t < bestHit.t)
             bestHit = hit;
@@ -209,11 +229,11 @@ Hit Scene::firstIntersect(const Ray &ray, Intersectable *skip)
     return bestHit;
 }
 
-LightSource Scene::sampleLightSource(const vec3 &illuminatedPoint) // the 3D point on an object
+LightSource Scene::sampleLightSource(const dvec3 &illuminatedPoint) // the 3D point on an object
 {
     while (true)
     { // if no light source is selected due to floating point inaccuracies, repeat
-        double threshold = totalPower * drandom();
+        double threshold = totalPower * Globals::drandom();
         double running = 0;
         for (int i = 0; i < objects.size(); i++)
         {
@@ -221,7 +241,7 @@ LightSource Scene::sampleLightSource(const vec3 &illuminatedPoint) // the 3D poi
         if (running > threshold)
         {
             Sphere *sphere = (Sphere *)objects[i];
-            vec3 point, normal;
+            dvec3 point, normal;
             // select a point on the visible half of the light source
             ((Sphere *)objects[i])->samplePoint(illuminatedPoint, point, normal);
             return LightSource(sphere, point, normal);
@@ -230,25 +250,25 @@ LightSource Scene::sampleLightSource(const vec3 &illuminatedPoint) // the 3D poi
     }     // for ever
 }
 
-vec3 Scene::pathTrace(const Ray &primaryRay)
+dvec3 Scene::pathTrace(const Ray &primaryRay)
 {
     Hit primaryHit = firstIntersect(primaryRay, nullptr);
     if (primaryHit.t < 0)
-        return vec3(0);
+        return dvec3(0);
 
-    if (primaryHit.material->diffuseAlbedo.average() < epsilon &&
-        primaryHit.material->specularAlbedo.average() < epsilon) {
+    if (average(primaryHit.material->diffuseAlbedo) < Globals::epsilon &&
+        average(primaryHit.material->specularAlbedo) < Globals::epsilon) {
         return primaryHit.material->getLe(primaryRay.dir);
     }
 
-    vec3 radiance(0, 0, 0);
+    dvec3 radiance(0, 0, 0);
 
     #ifdef ENABLE_MULTITHREADING
     size_t threadCount = omp_get_max_threads();
-    int localSamples = (int)ceil((double)nTotalSamples / threadCount);
-    nTotalSamples = localSamples * threadCount;
+    int localSamples = (int)ceil((double)Globals::nTotalSamples / threadCount);
+    Globals::nTotalSamples = localSamples * threadCount;
     #else
-    int localSamples = nTotalSamples;
+    int localSamples = Globals::nTotalSamples;
     #endif
 
     #ifdef ENABLE_MULTITHREADING
@@ -256,11 +276,11 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
     {
     #endif
 
-    vec3 localRadiance(0, 0, 0);
+    dvec3 localRadiance(0, 0, 0);
 
     for (int i = 0; i < localSamples; i++)
     {
-        vec3 radianceTraced(0, 0, 0);
+        dvec3 radianceTraced(0, 0, 0);
         double factor = 1;
         Ray r = primaryRay;
         Intersectable* ignore = nullptr;
@@ -270,23 +290,23 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
         if (hit.t < 0)
             break;
 
-        vec3 radianceEmitted = hit.material->getLe(r.dir);
+        dvec3 radianceEmitted = hit.material->getLe(r.dir);
         radianceTraced += factor * radianceEmitted;
-        if (hit.material->diffuseAlbedo.average() < epsilon &&
-            hit.material->specularAlbedo.average() < epsilon) {
+        if (average(hit.material->diffuseAlbedo) < Globals::epsilon &&
+            average(hit.material->specularAlbedo) < Globals::epsilon) {
             break;
         }
-        vec3 inDir = r.dir * (-1); // incident direction
+        dvec3 inDir = r.dir * (-1.0); // incident direction
 
         LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
-        vec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
+        dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
         double distance2 = dot(outDir, outDir);
         double distance = sqrt(distance2);
-        if (distance >= epsilon)
+        if (distance >= Globals::epsilon)
         {
             outDir = outDir / distance; // normalize the direction
-            double cosThetaLight = dot(lightSample.normal, outDir * (-1));
-            if (cosThetaLight > epsilon)
+            double cosThetaLight = dot(lightSample.normal, outDir * (-1.0));
+            if (cosThetaLight > Globals::epsilon)
             {
             // visibility is not needed to handle, all lights are visible
             double pdfLightSourceSampling =
@@ -297,7 +317,7 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
             {
                 // yes, the light is visible and contributes to the output power
                 // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                vec3 f = lightSample.sphere->material->getLe(outDir) *
+                dvec3 f = lightSample.sphere->material->getLe(outDir) *
                         hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
                 double p = pdfLightSourceSampling;
                 // importance sample = 1/n . \sum (f/prob)
@@ -313,8 +333,8 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
         if (cosThetaSurface <= 0)
             break;
 
-        double p = std::min(0.9, hit.material->specularAlbedo.average());
-        double e = drandom();
+        double p = std::min(0.9, average(hit.material->specularAlbedo));
+        double e = Globals::drandom();
         if (e >= p)
             break;
 
@@ -322,7 +342,7 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
         ignore = hit.object;
         factor *= 0.5;
         }
-        localRadiance += radianceTraced / nTotalSamples;
+        localRadiance += radianceTraced / (double)Globals::nTotalSamples;
     }
     #ifdef ENABLE_MULTITHREADING
     #pragma omp critical
@@ -335,20 +355,20 @@ vec3 Scene::pathTrace(const Ray &primaryRay)
     return radiance;
 }
 
-vec3 Scene::trace(const Ray &r)
+dvec3 Scene::trace(const Ray &r)
 {
     // error measures for the two combined techniques: used for adaptation
     Hit hit = firstIntersect(r, NULL); // find visible point
     if (hit.t < 0)
-        return vec3(0, 0, 0);
+        return dvec3(0, 0, 0);
     // The energy emanated from the material
-    vec3 radianceEmitted = hit.material->getLe(r.dir);
-    if (hit.material->diffuseAlbedo.average() < epsilon &&
-        hit.material->specularAlbedo.average() < epsilon)
+    dvec3 radianceEmitted = hit.material->getLe(r.dir);
+    if (average(hit.material->diffuseAlbedo) < Globals::epsilon &&
+        average(hit.material->specularAlbedo) < Globals::epsilon)
         return radianceEmitted; // if albedo is low, no energy can be reefleted
     // Compute the contribution of reflected lgiht
-    vec3 radianceBRDFSampling(0, 0, 0), radianceLightSourceSampling(0, 0, 0);
-    vec3 inDir = r.dir * (-1); // incident direction
+    dvec3 radianceBRDFSampling(0, 0, 0), radianceLightSourceSampling(0, 0, 0);
+    dvec3 inDir = r.dir * (-1.0); // incident direction
 
     int localLighSamples = nLightSamples;
     int localBRDFSamples = nBRDFSamples;
@@ -370,18 +390,18 @@ vec3 Scene::trace(const Ray &r)
         {
         #endif
 
-        vec3 localRadianceLightSourceSampling(0);
+        dvec3 localRadianceLightSourceSampling(0);
         for (int i = 0; i < localLighSamples; i++)
         {
         LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
-        vec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
+        dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
         double distance2 = dot(outDir, outDir);
         double distance = sqrt(distance2);
-        if (distance >= epsilon)
+        if (distance >= Globals::epsilon)
         {
             outDir = outDir / distance; // normalize the direction
-            double cosThetaLight = dot(lightSample.normal, outDir * (-1));
-            if (cosThetaLight > epsilon)
+            double cosThetaLight = dot(lightSample.normal, outDir * (-1.0));
+            if (cosThetaLight > Globals::epsilon)
             {
             // visibility is not needed to handle, all lights are visible
             double pdfLightSourceSampling =
@@ -393,14 +413,14 @@ vec3 Scene::trace(const Ray &r)
             {
                 // yes, the light is visible and contributes to the output power
                 // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                vec3 f = lightSample.sphere->material->getLe(outDir) *
+                dvec3 f = lightSample.sphere->material->getLe(outDir) *
                         hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
                 double p = pdfLightSourceSampling;
                 if (method == MULTIPLE_IMPORTANCE) {
                 p += pdfBRDFSampling;
                 }
                 // importance sample = 1/n . \sum (f/prob)
-                localRadianceLightSourceSampling += f / p / nTotalSamples;
+                localRadianceLightSourceSampling += f / p / (double)Globals::nTotalSamples;
             } // if
             }
         }
@@ -421,11 +441,11 @@ vec3 Scene::trace(const Ray &r)
         {
         #endif
 
-        vec3 localRadianceBRDFSampling(0);
+        dvec3 localRadianceBRDFSampling(0);
         for (int i = 0; i < localBRDFSamples; i++)
         {
         // BRDF.cos(theta) sampling should be implemented first!
-        vec3 outDir;
+        dvec3 outDir;
         // BRDF sampling with Russian roulette
         if (hit.material->sampleDirection(hit.normal, inDir, outDir))
         {
@@ -433,27 +453,27 @@ vec3 Scene::trace(const Ray &r)
             double cosThetaSurface = dot(hit.normal, outDir);
             if (cosThetaSurface > 0)
             {
-            vec3 brdf = hit.material->BRDF(hit.normal, inDir, outDir);
+            dvec3 brdf = hit.material->BRDF(hit.normal, inDir, outDir);
             // Trace a ray to the scene
             Hit lightSource = firstIntersect(Ray(hit.position, outDir), hit.object);
             // Do we hit a light source
-            if (lightSource.t > 0 && lightSource.material->getLe(outDir).average() > 0)
+            if (lightSource.t > 0 && average(lightSource.material->getLe(outDir)) > 0)
             {
-                vec3 dirToLight = lightSource.position - hit.position;
+                dvec3 dirToLight = lightSource.position - hit.position;
                 // squared distance between an illuminated point and light source
                 double distance2 = dot(dirToLight, dirToLight);
-                double cosThetaLight = dot(lightSource.normal, outDir * (-1));
-                if (cosThetaLight > epsilon)
+                double cosThetaLight = dot(lightSource.normal, outDir * (-1.0));
+                if (cosThetaLight > Globals::epsilon)
                 {
                 double pdfLightSourceSampling =
                     lightSource.object->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
                 // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                vec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
+                dvec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
                 double p = pdfBRDFSampling;
                 if (method == MULTIPLE_IMPORTANCE) {
                     p += pdfLightSourceSampling;
                 }
-                localRadianceBRDFSampling += f / p / nTotalSamples;
+                localRadianceBRDFSampling += f / p / (double)Globals::nTotalSamples;
                 }
                 else
                 printf("ERROR: Sphere hit from back\n");
@@ -476,6 +496,6 @@ vec3 Scene::trace(const Ray &r)
 void Scene::testRay(int X, int Y)
 {
     nBRDFSamples = nLightSamples = 1000;
-    vec3 current = trace(camera.getRay(X, Y));
+    dvec3 current = trace(camera.getRay(X, Y));
     printf("Pixel %d, %d Value = %f, %f, %f\n", X, Y, current.x, current.y, current.z);
 }

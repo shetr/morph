@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RSO_MATERIAL_HPP
+#define RSO_MATERIAL_HPP
 
 #include "Image.hpp"
 
@@ -53,3 +54,5 @@ private:
 
   dvec3 sampleBilinear(double x, double y) const;
 };
+
+#endif // RSO_MATERIAL_HPP

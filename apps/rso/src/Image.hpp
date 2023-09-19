@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RSO_IMAGE_HPP
+#define RSO_IMAGE_HPP
 
 #include "Globals.hpp"
 
@@ -23,3 +24,5 @@ void getPseudocolorCoolWarm(double val, double minVal, double maxVal, double &r,
 Image ReadHDR(const char* filename);
 
 void SaveHDR(const char* filename, const dvec3* inImage, int width, int height, bool psf = false);
+
+#endif // RSO_IMAGE_HPP

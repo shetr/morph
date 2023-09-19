@@ -1,40 +1,43 @@
 #include "SceneObjs.hpp"
 
-Rect::Rect(vec3 _r0, vec3 _r1, vec3 _r2, double _width, double _height, Material *mat)
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+Rect::Rect(dvec3 _r0, dvec3 _r1, dvec3 _r2, double _width, double _height, Material *mat)
 {
     r0 = _r0;
-    vec3 L = _r1 - r0;
-    vec3 V = _r2 - r0;
+    dvec3 L = _r1 - r0;
+    dvec3 V = _r2 - r0;
     // compute normal
-    normal = (L.normalize() + V.normalize()).normalize();
+    normal = normalize(normalize(L) + normalize(V));
     material = mat;
     power = 0; // default - does not emit light
     width = _width;
     height = _height;
     // recompute directions to get rectangle
-    right = cross(vec3(0, 0, 1), normal).normalize();
-    forward = cross(normal, right).normalize();
+    right = normalize(cross(dvec3(0, 0, 1), normal));
+    forward = normalize(cross(normal, right));
 }
 
 Rect::Rect(double _size, Material *mat)
 {
-    r0 = vec3(0, 0, 0);
+    r0 = dvec3(0, 0, 0);
     // compute normal
-    normal = vec3(0, 0, 1);
+    normal = dvec3(0, 0, 1);
     material = mat;
     power = 0; // default - does not emit light
     width = _size / 2;
     height = _size / 2;
     // recompute directions to get rectangle
-    right = vec3(1, 0, 0);
-    forward = vec3(0, 1, 0);
+    right = dvec3(1, 0, 0);
+    forward = dvec3(0, 1, 0);
 }
 
 Hit Rect::intersect(const Ray &ray)
 {
     Hit hit;
     double denom = dot(normal, ray.dir);
-    if (fabs(denom) > epsilon)
+    if (fabs(denom) > Globals::epsilon)
     {
         hit.t = dot(normal, r0 - ray.start) / denom;
         if (hit.t < 0)
@@ -55,14 +58,14 @@ Hit Rect::intersect(const Ray &ray)
     return hit;
 }
 
-Sphere::Sphere(const vec3 &cent, double rad, Material *mat, bool emit = true, const double targetPower)
+Sphere::Sphere(const dvec3 &cent, double rad, Material *mat, bool emit, const double targetPower)
 {
     center = cent;
     radius = rad;
     material = mat;
     if (emit)
     {
-        power = material->Le.average() * (4 * radius * radius * M_PI) * M_PI;
+        power = average(material->Le) * (4 * radius * radius * M_PI) * M_PI;
         material->Le = material->Le * (targetPower / power);
         power = targetPower;
     }
@@ -71,7 +74,7 @@ Sphere::Sphere(const vec3 &cent, double rad, Material *mat, bool emit = true, co
 Hit Sphere::intersect(const Ray &r)
 {
     Hit hit;
-    vec3 dist = r.start - center;
+    dvec3 dist = r.start - center;
     double b = dot(dist, r.dir) * 2.0;
     double a = dot(r.dir, r.dir);
     double c = dot(dist, dist) - radius * radius;
@@ -98,26 +101,26 @@ Hit Sphere::intersect(const Ray &r)
     return hit;
 }
 
-void Sphere::samplePoint(const vec3 &illuminatedPoint, vec3 &point, vec3 &normal)
+void Sphere::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
 {
     return sampleUniformPoint(illuminatedPoint, point, normal);
 }
 
-void Sphere::sampleUniformPoint(const vec3 &illuminatedPoint, vec3 &point, vec3 &normal)
+void Sphere::sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
 {
-    normal = vec3(2);
+    normal = dvec3(2);
     while (dot(normal, normal) > 1)
     {
         // uniform in a cube of edge size 2
-        normal = vec3(drandom() * 2 - 1, drandom() * 2 - 1, drandom() * 2 - 1);
+        normal = dvec3(Globals::drandom() * 2 - 1, Globals::drandom() * 2 - 1, Globals::drandom() * 2 - 1);
         if (dot(illuminatedPoint - center, normal) < 0)
         continue;                      // ignore surely non visible points
     } // finish if the point is in the unit sphere
-    normal = normal.normalize();       // project points onto the surface of the unit sphere
+    normal = normalize(normal);       // project points onto the surface of the unit sphere
     point = center + normal * radius;  // project onto the real sphere
 }
 
-double Sphere::pointSampleProb(double totalPower, vec3 dir)
+double Sphere::pointSampleProb(double totalPower, dvec3 dir)
 {
     return power / totalPower / (4 * radius * radius * M_PI);
 }

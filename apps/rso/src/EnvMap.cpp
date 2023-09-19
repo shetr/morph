@@ -1,5 +1,8 @@
 #include "EnvMap.hpp"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 Distribution1D::Distribution1D(const std::vector<double>& f, int n)
 {
     func.resize(n, 0);
@@ -26,13 +29,13 @@ void Distribution1D::ComputeStep1dCDF()
     for (int i = 0; i < count; ++i) {
         cdf[i + 1] = cdf[i] + (func[i] / (double)count);
     }
-    funcInt = std::max(cdf[count], epsilon);
+    funcInt = std::max(cdf[count], Globals::epsilon);
     for (int i = 0; i < count; ++i) {
         cdf[i + 1] /= funcInt;
     }
 }
 
-EnvMap::EnvMap(const char* hdrFilename) : Sphere(vec3(), 1, new EnvMapMaterial(hdrFilename), true, 1)
+EnvMap::EnvMap(const char* hdrFilename) : Sphere(dvec3(), 1, new EnvMapMaterial(hdrFilename), true, 1)
 {
     EnvMapMaterial* mat = (EnvMapMaterial*)material;
     const Image& hdrImage = mat->hdrImage;
@@ -45,7 +48,7 @@ EnvMap::EnvMap(const char* hdrFilename) : Sphere(vec3(), 1, new EnvMapMaterial(h
         double sinTheta = sin(M_PI * (double) y / (double)height);
         for (int x = 0; x < width; ++x) {
         int i = x + y * width;
-        intensities[i] = std::max(dot(vec3(0.2989, 0.5870, 0.1140), hdrImage.data[i]), epsilon);
+        intensities[i] = std::max(dot(dvec3(0.2989, 0.5870, 0.1140), hdrImage.data[i]), Globals::epsilon);
         }
     }
 
@@ -121,10 +124,10 @@ EnvMap::EnvMap(const char* hdrFilename) : Sphere(vec3(), 1, new EnvMapMaterial(h
         g_testImage = mat->hdrImage;
         for (int i = 0; i < 200000; ++i)
         {
-        vec3 dir;
-        vec3 normal;
-        samplePoint(vec3(0), dir, normal);
-        mat->getLeRef(dir) = vec3(1,0,0);
+        dvec3 dir;
+        dvec3 normal;
+        samplePoint(dvec3(0), dir, normal);
+        mat->getLeRef(dir) = dvec3(1,0,0);
         }
         std::swap(g_testImage, mat->hdrImage);
     #endif
@@ -143,19 +146,19 @@ Hit EnvMap::intersect(const Ray &r)
     return hit;
 }
 
-void EnvMap::samplePoint(const vec3 &illuminatedPoint, vec3 &point, vec3 &normal)
+void EnvMap::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
 {
-    double e1 = drandom();
+    double e1 = Globals::drandom();
     double pdfs[2];
     double fx = uDistrib.Sample(e1, &pdfs[0]);
-    int x = Clamp((int)fx, 0, uDistrib.count-1);
-    double e2 = drandom();
+    int x = clamp((int)fx, 0, uDistrib.count-1);
+    double e2 = Globals::drandom();
     double fy = vDistribs[x].Sample(e2, &pdfs[1]);
 
     double theta = fy * vDistribs[x].invCount * M_PI;
     double phi = fx * uDistrib.invCount * 2. * M_PI;
 
-    vec3 dir;
+    dvec3 dir;
     dir.x = cos(phi) * sin(theta);
     dir.y = sin(phi) * sin(theta);
     dir.z = cos(theta);
@@ -163,7 +166,7 @@ void EnvMap::samplePoint(const vec3 &illuminatedPoint, vec3 &point, vec3 &normal
     normal = -dir;
 }
 
-double EnvMap::pointSampleProb(double totalPower, vec3 dir)
+double EnvMap::pointSampleProb(double totalPower, dvec3 dir)
 {
     double theta = acos(dir.z);
     double phi = atan2(dir.y, dir.x);
@@ -171,8 +174,8 @@ double EnvMap::pointSampleProb(double totalPower, vec3 dir)
         phi += 2 * M_PI;
     }
 
-    int x = Clamp((int)(width * phi / (2 * M_PI)), 0, (width - 1));
-    int y = Clamp((int)(height * theta / M_PI), 0, (height - 1));
+    int x = clamp((int)(width * phi / (2 * M_PI)), 0, (width - 1));
+    int y = clamp((int)(height * theta / M_PI), 0, (height - 1));
     double puv = (uDistrib.func[x] * vDistribs[x].func[y]) / (uDistrib.funcInt * vDistribs[x].funcInt);
     //return puv * nu * nv / (2.0 * M_PI * M_PI * sinTheta);
     return (power / totalPower) * puv / (2.0 * M_PI * M_PI * sin(theta));
