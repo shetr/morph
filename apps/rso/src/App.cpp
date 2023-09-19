@@ -7,7 +7,18 @@ Application::Application(const WindowAppConfig& config)
     m_windowManagerErrorAttacher(&windowManager(), this, &Application::OnWindowManagerError),
     m_windowSizeEventAttacher(&windowManager(), this, &Application::OnWindowSizeEvent),
     m_keyEventAttacher(&windowManager(), this, &Application::OnKeyEvent),
-    m_scrollEventAttacher(&windowManager(), this, &Application::OnScrollEvent)
+    m_scrollEventAttacher(&windowManager(), this, &Application::OnScrollEvent),
+    m_resStorage(unord_map<string, string>({{"engine", MORPH_ENGINE_RES}, {"app", MORPH_APP_RES}})),
+    m_progCompiler(context(), m_resStorage),
+    m_commonResources(context(), m_resStorage, m_progCompiler),
+    m_screenTextureSettings({
+        TextureMinFilterSetting(TextureMinFilter::NEAREST),
+        TextureMagFilterSetting(TextureMagFilter::NEAREST),
+        TextureWrap2DSetting(TextureWrapType::CLAMP_TO_EDGE)
+    }),
+    m_screenTexture(context().CreateTexture2D(window().GetSize(), TextureSizedFormat::RGB32F, m_screenTextureSettings)),
+    m_screenTextureSamplerUnit(TextureUnit::_0),
+    m_screenTextureSamplerUniform("u_textureSampler", m_screenTextureSamplerUnit)
 {
     uvec2 winSize = window().GetSize();
     Globals::resize_image(winSize.x, winSize.y);
@@ -18,7 +29,11 @@ Application::Application(const WindowAppConfig& config)
 
 void Application::RunFrame(f64 lastIterTime, f64 lastFrameTime)
 {
-
+    FramebufferBinder framebufferBinder = context().BindFramebuffer(context().GetDefaultFramebuffer());
+    RenderProgramBinder programBinder = context().BindProgram(m_commonResources.ScreenFillProgram());
+    TextureUnitBinder textureUnitBinder = context().BindTextureUnit(m_screenTextureSamplerUnit, m_screenTexture);
+    m_screenTextureSamplerUniform.Set(programBinder);
+    m_commonResources.ScreenQuad2DMesh().Draw(context(), framebufferBinder, programBinder);
 }
 
 void Application::OnWindowManagerError(const WindowManagerError& error)

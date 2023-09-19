@@ -6,8 +6,12 @@
 #include <spdlog/spdlog.h>
 
 #include <Morph.hpp>
-#include <App/WindowApp.hpp>
 #include <Core/JobManager.hpp>
+#include <App/WindowApp.hpp>
+#include <Graphics/Context.hpp>
+#include <Graphics/Uniforms.hpp>
+#include <Resource/GraphicsProgramCompiler.hpp>
+#include <Resource/Common.hpp>
 
 #include "Scene.hpp"
 
@@ -24,6 +28,14 @@ private:
 
     Scene m_scene;
     JobManager m_jobManager;
+
+    ResourceStorage m_resStorage;
+    GraphicsProgramCompiler m_progCompiler;
+    CommonResources m_commonResources;
+    TextureSettings m_screenTextureSettings;
+    Texture2D m_screenTexture;
+    TextureUnit m_screenTextureSamplerUnit;
+    Uniform<TextureUnit> m_screenTextureSamplerUniform;
 public:
     Application(const WindowAppConfig& config);
 
