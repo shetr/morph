@@ -1,5 +1,7 @@
 #include "Scene.hpp"
 
+#include <iostream>
+#include <chrono>
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -131,7 +133,7 @@ void Scene::render()
     char buffer[100];
     FILE *errorFile = 0;
 
-    switch (method)
+    switch (Globals::method)
     {
     case BRDF:
         nBRDFSamples = Globals::nTotalSamples;
@@ -184,7 +186,7 @@ void Scene::render()
 
             // For a primary ray at pixel (X,Y) compute the color
             dvec3 color;
-            if (method == PATH_TRACING) {
+            if (Globals::method == PATH_TRACING) {
             color = pathTrace(camera.getRay(X, Y));
             } else {
             color = trace(camera.getRay(X, Y));
@@ -416,7 +418,7 @@ dvec3 Scene::trace(const Ray &r)
                 dvec3 f = lightSample.sphere->material->getLe(outDir) *
                         hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
                 double p = pdfLightSourceSampling;
-                if (method == MULTIPLE_IMPORTANCE) {
+                if (Globals::method == MULTIPLE_IMPORTANCE) {
                 p += pdfBRDFSampling;
                 }
                 // importance sample = 1/n . \sum (f/prob)
@@ -470,7 +472,7 @@ dvec3 Scene::trace(const Ray &r)
                 // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
                 dvec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
                 double p = pdfBRDFSampling;
-                if (method == MULTIPLE_IMPORTANCE) {
+                if (Globals::method == MULTIPLE_IMPORTANCE) {
                     p += pdfLightSourceSampling;
                 }
                 localRadianceBRDFSampling += f / p / (double)Globals::nTotalSamples;

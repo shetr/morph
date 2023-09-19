@@ -1,10 +1,12 @@
 #ifndef RSO_GLOBALS_HPP
 #define RSO_GLOBALS_HPP
 
-#include <Morph.hpp>
+#include <glm/glm.hpp> 
 #include <random>
 
-using namespace glm;
+//using namespace glm;
+using dvec3 = glm::dvec3;
+using glm::clamp;
 
 // Which sampling method should be used
 enum Method
@@ -14,7 +16,7 @@ enum Method
   HALF_WEIGHT,
   MULTIPLE_IMPORTANCE,
   PATH_TRACING
-} method;
+};
 
 class RandGen {
 public:
@@ -39,6 +41,8 @@ public:
     static double costBRDF;
     static double costLight;
     static double referenceEfficiency;
+
+    static Method method;
 
     static bool useMultithreading;
     static std::vector<RandGen> randomGenerators;

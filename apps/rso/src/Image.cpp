@@ -1,5 +1,7 @@
 #include "Image.hpp"
 
+#include <iostream>
+
 double average(dvec3 v)
 {
   return dot(v, dvec3(0)) / 3.0;

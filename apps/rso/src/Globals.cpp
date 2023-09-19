@@ -10,6 +10,7 @@ int Globals::nTotalSamples = 600;
 double Globals::costBRDF = 1.0;
 double Globals::costLight = 1.0;
 double Globals::referenceEfficiency = 1.0;
+Method Globals::method = Method::BRDF;
 bool Globals::useMultithreading = false;
 std::vector<RandGen> Globals::randomGenerators;
 const float Globals::pscols[4 * 33] = { // 33 colors RGB
