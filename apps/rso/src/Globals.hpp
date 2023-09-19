@@ -4,10 +4,12 @@
 #include <glm/glm.hpp> 
 #include <random>
 
-//using namespace glm;
+using namespace glm;
 using dvec3 = glm::dvec3;
 using vec3 = glm::vec3;
 using glm::clamp;
+
+//#include "vec.hpp"
 
 // Which sampling method should be used
 enum Method
