@@ -149,7 +149,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
             }
 
             SaveHDR(hdrFilename, Globals::hdrImage);
-            SaveTGA(tgaFilename, Globals::hdrImage);
+            SaveTGA(tgaFilename, Globals::ldrImage);
             break;
         }
         } // switch (key)
