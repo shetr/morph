@@ -3,6 +3,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+namespace Morph {
+
 Distribution1D::Distribution1D(const std::vector<double>& f, int n)
 {
     func.resize(n, 0);
@@ -151,7 +153,7 @@ void EnvMap::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &nor
     double e1 = Globals::drandom();
     double pdfs[2];
     double fx = uDistrib.Sample(e1, &pdfs[0]);
-    int x = clamp((int)fx, 0, uDistrib.count-1);
+    int x = glm::clamp((int)fx, 0, uDistrib.count-1);
     double e2 = Globals::drandom();
     double fy = vDistribs[x].Sample(e2, &pdfs[1]);
 
@@ -174,10 +176,11 @@ double EnvMap::pointSampleProb(double totalPower, dvec3 dir)
         phi += 2 * M_PI;
     }
 
-    int x = clamp((int)(width * phi / (2 * M_PI)), 0, (width - 1));
-    int y = clamp((int)(height * theta / M_PI), 0, (height - 1));
+    int x = glm::clamp((int)(width * phi / (2 * M_PI)), 0, (width - 1));
+    int y = glm::clamp((int)(height * theta / M_PI), 0, (height - 1));
     double puv = (uDistrib.func[x] * vDistribs[x].func[y]) / (uDistrib.funcInt * vDistribs[x].funcInt);
     //return puv * nu * nv / (2.0 * M_PI * M_PI * sinTheta);
     return (power / totalPower) * puv / (2.0 * M_PI * M_PI * sin(theta));
 }
 
+}

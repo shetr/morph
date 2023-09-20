@@ -3,6 +3,8 @@
 
 #include "SceneObjs.hpp"
 
+namespace Morph {
+
 struct Distribution1D
 {
   std::vector<double> func;
@@ -39,5 +41,7 @@ struct EnvMap : public Sphere
 
   double pointSampleProb(double totalPower, dvec3 dir) override;
 };
+
+}
 
 #endif // RSO_ENVMAP_HPP

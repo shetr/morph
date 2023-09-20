@@ -5,6 +5,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+namespace Morph {
+
 void Camera::set(const dvec3 &_eye, const dvec3 &_lookat, const dvec3 &_vup, double fov)
 {
     eye = _eye;
@@ -17,8 +19,8 @@ void Camera::set(const dvec3 &_eye, const dvec3 &_lookat, const dvec3 &_vup, dou
 Ray Camera::getRay(int X, int Y)
 { // X,Y - pixel coordinates, compute a primary ray
     dvec3 dir = lookat +
-                right * (2.0 * (X + 0.5) / Globals::screenWidth - 1) +
-                up * (2.0 * (Y + 0.5) / Globals::screenHeight - 1) - eye;
+                right * (2.0 * (X + 0.5) / Globals::screenSize.x - 1) +
+                up * (2.0 * (Y + 0.5) / Globals::screenSize.y - 1) - eye;
     return Ray(eye, normalize(dir));
 }
 
@@ -125,10 +127,10 @@ void Scene::render()
     #endif
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    for (int y = 0; y < Globals::screenHeight; y++)
+    for (int y = 0; y < Globals::screenSize.y; y++)
     { // for all rows
         printf("%d\r", y);
-        for (int x = 0; x < Globals::screenWidth; x++)
+        for (int x = 0; x < Globals::screenSize.x; x++)
         { // for all pixels in a row
             nLightSamples = (int)(Globals::weight * Globals::nTotalSamples + 0.5);
             nBRDFSamples = Globals::nTotalSamples - nLightSamples;
@@ -140,14 +142,14 @@ void Scene::render()
             } else {
                 color = trace(camera.getRay(x, y));
             }
-            Globals::image[y * Globals::screenWidth + x] = color;
+            Globals::image(x, y) = color;
 
             // map HDR to LDR
-            vec3 hdrColor = Globals::image[y * Globals::screenWidth + x];
-            vec3 mapped = vec3(1.0) - exp(-hdrColor * Globals::exposure);
+            vec3 hdrColor = Globals::image(x, y);
+            vec3 mapped = vec3(1.0) - glm::exp(-hdrColor * Globals::exposure);
             // gamma correction 
-            mapped = pow(mapped, vec3(1.0 / Globals::gamma));
-            Globals::ldrImage[y * Globals::screenWidth + x] = mapped;
+            mapped = glm::pow(mapped, vec3(1.0 / Globals::gamma));
+            Globals::ldrImage(x, y) = mapped;
         } // for X
     }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -441,4 +443,6 @@ void Scene::testRay(int X, int Y)
     nBRDFSamples = nLightSamples = 1000;
     dvec3 current = trace(camera.getRay(X, Y));
     printf("Pixel %d, %d Value = %f, %f, %f\n", X, Y, current.x, current.y, current.z);
+}
+
 }

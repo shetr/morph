@@ -3,6 +3,8 @@
 
 #include "Ray.hpp"
 
+namespace Morph {
+
 // Rectangle 2D in 3D space
 class Rect : public Intersectable
 {
@@ -39,5 +41,7 @@ struct Sphere : public Intersectable
 
   virtual double pointSampleProb(double totalPower, dvec3 dir) override;
 };
+
+}
 
 #endif // RSO_SCENE_OBJS_HPP

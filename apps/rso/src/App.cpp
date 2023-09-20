@@ -30,7 +30,7 @@ Application::Application(const WindowAppConfig& config)
     m_screenTextureSamplerUniform("u_textureSampler", m_screenTextureSamplerUnit)
 {
     uvec2 winSize = window().GetSize();
-    Globals::resize_image(winSize.x, winSize.y);
+    Globals::resize_image(winSize);
     m_scene.build();
     Globals::method = LIGHT_SOURCE;
     Usage();
@@ -106,7 +106,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
             FILE *refImage = fopen("image.bin", "wb");
             if (refImage)
             {
-            fwrite(Globals::image.data(), sizeof(vec3), Globals::screenWidth * Globals::screenHeight, refImage);
+            fwrite(Globals::image.data(), sizeof(vec3), Globals::screenSize.x * Globals::screenSize.y, refImage);
             fclose(refImage);
             }
         }
@@ -138,7 +138,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
             if (event.ModKeyPressed(ModKey::SHIFT)) {
                 psf = true;
             }
-            SaveHDR(filename, Globals::image.data(), Globals::screenWidth, Globals::screenHeight, psf);
+            SaveHDR(filename, Globals::image.data(), Globals::screenSize.x, Globals::screenSize.y, psf);
             break;
         }
         case Key::G:
@@ -172,7 +172,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
                 std::string outFile = inHdr + "_" + methodNames[m] + samplesString + ".hdr";
                 Globals::method = methods[m];
                 m_scene.render();
-                SaveHDR(outFile.c_str(), Globals::image.data(), Globals::screenWidth, Globals::screenHeight, false);
+                SaveHDR(outFile.c_str(), Globals::image.data(), Globals::screenSize.x, Globals::screenSize.y, false);
             }
             }
             Globals::nTotalSamples = oldSamples;

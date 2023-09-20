@@ -3,6 +3,8 @@
 
 #include "Image.hpp"
 
+namespace Morph {
+
 // The definition of material surface (BRDF + emission)
 struct Material
 {
@@ -54,5 +56,7 @@ private:
 
   dvec3 sampleBilinear(double x, double y) const;
 };
+
+}
 
 #endif // RSO_MATERIAL_HPP

@@ -1,15 +1,14 @@
 #ifndef RSO_GLOBALS_HPP
 #define RSO_GLOBALS_HPP
 
-#include <glm/glm.hpp> 
+#include <Morph.hpp>
+#include <Core/Arrays.hpp>
+
 #include <random>
 
-using namespace glm;
-using dvec3 = glm::dvec3;
-using vec3 = glm::vec3;
-using glm::clamp;
-
 //#include "vec.hpp"
+
+namespace Morph {
 
 // Which sampling method should be used
 enum Method
@@ -46,15 +45,16 @@ public:
     static bool useMultithreading;
     static std::vector<RandGen> randomGenerators;
     static const float pscols[4 * 33];
-    static int screenWidth;
-    static int screenHeight;
-    static std::vector<vec3> image;
-    static std::vector<vec3> ldrImage;
+    static uvec2 screenSize;
+    static vector2d<vec3> image;
+    static vector2d<vec3> ldrImage;
     static float weight;
 
-    static void resize_image(int _screenWidth, int _screenHeight);
+    static void resize_image(uvec2 _screenSize);
 
     static double drandom();
 };
+
+}
 
 #endif // RSO_GLOBALS_HPP

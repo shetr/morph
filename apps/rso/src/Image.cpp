@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+namespace Morph {
+
 double average(dvec3 v)
 {
   return dot(v, dvec3(1)) / 3.0;
@@ -269,7 +271,7 @@ void SaveTGA()
   {
     fputc(0, ofile);
   }
-  int width = Globals::screenWidth * 2, height = Globals::screenHeight;
+  int width = Globals::screenSize.x * 2, height = Globals::screenSize.y;
   fputc(width % 256, ofile);
   fputc(width / 256, ofile);
   fputc(height % 256, ofile);
@@ -277,23 +279,23 @@ void SaveTGA()
   fputc(24, ofile);
   fputc(32, ofile);
 
-  for (int Y = Globals::screenHeight - 1; Y >= 0; Y--)
+  for (int Y = Globals::screenSize.y - 1; Y >= 0; Y--)
   {
     for (int X = 0; X < width; X++)
     {
       double r, g, b;
-      if (X < Globals::screenWidth)
+      if (X < Globals::screenSize.x)
       {
-        r = Globals::image[Y * Globals::screenWidth + X].x;
-        g = Globals::image[Y * Globals::screenWidth + X].y;
-        b = Globals::image[Y * Globals::screenWidth + X].z;
+        r = Globals::image(X, Y).x;
+        g = Globals::image(X, Y).y;
+        b = Globals::image(X, Y).z;
       }
       else
       {
-        int XX = X - Globals::screenWidth;
+        int XX = X - Globals::screenSize.x;
         double w = Globals::weight;
-        if (Globals::showBargraph && (XX > 0.98 * Globals::screenWidth))
-          w = (double)Y / Globals::screenHeight; // thin bar on the right showing the mapping
+        if (Globals::showBargraph && (XX > 0.98 * Globals::screenSize.x))
+          w = (double)Y / Globals::screenSize.y; // thin bar on the right showing the mapping
         if (Globals::rainbowPSC)
           getPseudocolorRainbow(w, 0.0, 1.0, r, g, b); // is more common but wrong perceptually
         else
@@ -308,4 +310,6 @@ void SaveTGA()
     }
   }
   fclose(ofile);
+}
+
 }

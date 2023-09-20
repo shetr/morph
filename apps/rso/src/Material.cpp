@@ -7,6 +7,8 @@
 
 #define USE_CUSTOM_BRDF
 
+namespace Morph {
+
 dvec3 Material::BRDF(const dvec3 &N, const dvec3 &V, const dvec3 &L)
 {
     dvec3 brdf(0, 0, 0);
@@ -165,8 +167,8 @@ dvec3 EnvMapMaterial::getLe(dvec3 dir) const
         phi += 2 * M_PI;
     }
 
-    int x = clamp((int)(hdrImage.width * phi / (2 * M_PI)), 0, (hdrImage.width - 1));
-    int y = clamp((int)(hdrImage.height * theta / M_PI), 0, (hdrImage.height - 1));
+    int x = glm::clamp((int)(hdrImage.width * phi / (2 * M_PI)), 0, (hdrImage.width - 1));
+    int y = glm::clamp((int)(hdrImage.height * theta / M_PI), 0, (hdrImage.height - 1));
     return sampleBilinear(x, y);
 }
 
@@ -178,8 +180,8 @@ dvec3& EnvMapMaterial::getLeRef(dvec3 dir)
         phi += 2 * M_PI;
     }
 
-    int x = clamp((int)(hdrImage.width * phi / (2 * M_PI)), 0, (hdrImage.width - 1));
-    int y = clamp((int)(hdrImage.height * theta / M_PI), 0, (hdrImage.height - 1));
+    int x = glm::clamp((int)(hdrImage.width * phi / (2 * M_PI)), 0, (hdrImage.width - 1));
+    int y = glm::clamp((int)(hdrImage.height * theta / M_PI), 0, (hdrImage.height - 1));
     return hdrImage.data[x + y * hdrImage.width];
 }
 
@@ -197,4 +199,6 @@ dvec3 EnvMapMaterial::sampleBilinear(double x, double y) const
     int x1 = (int)ceil(x);
     int y1 = (int)ceil(y);
     return (1 - ty) * ((1 - tx) * sample(x0, y0) + tx * sample(x1, y0)) + ty * ((1 - tx) * sample(x0, y1) + tx * sample(x1, y1)); 
+}
+
 }

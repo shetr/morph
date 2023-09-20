@@ -2,6 +2,8 @@
 
 #include <thread>
 
+namespace Morph {
+
 float Globals::gamma = 2.2;
 float Globals::exposure = 1.0;
 const double Globals::epsilon = 1e-9;
@@ -30,18 +32,16 @@ const float Globals::pscols[4 * 33] = { // 33 colors RGB
     0.9375, 0.795631745, 0.24128379, 0.220525627, 0.96875, 0.752534934, 0.157246067, 0.184115123,
     1.0, 0.705673158, 0.01555616, 0.150232812
 };
-int Globals::screenWidth = 600;
-int Globals::screenHeight = 600;
-std::vector<vec3> Globals::image;
-std::vector<vec3> Globals::ldrImage;
+uvec2 Globals::screenSize = uvec2(600, 600);
+vector2d<vec3> Globals::image;
+vector2d<vec3> Globals::ldrImage;
 float Globals::weight = 0;
 
-void Globals::resize_image(int _screenWidth, int _screenHeight)
+void Globals::resize_image(uvec2 _screenSize)
 {
-    screenWidth = _screenWidth;
-    screenHeight = _screenHeight;
-    image.assign(screenWidth * screenHeight, vec3(0));
-    ldrImage.assign(screenWidth * screenHeight, vec3(0));
+    screenSize = _screenSize;
+    image.assign(screenSize, vec3(0));
+    ldrImage.assign(screenSize, vec3(0));
 }
 
 double Globals::drandom()
@@ -51,4 +51,6 @@ double Globals::drandom()
     } else {
         return (double)rand() / RAND_MAX;
     }
+}
+
 }

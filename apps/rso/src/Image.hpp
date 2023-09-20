@@ -3,6 +3,8 @@
 
 #include "Globals.hpp"
 
+namespace Morph {
+
 double average(dvec3 v);
 
 struct RGBE
@@ -26,5 +28,7 @@ Image ReadHDR(const char* filename);
 void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf = false);
 
 void SaveTGA();
+
+}
 
 #endif // RSO_IMAGE_HPP

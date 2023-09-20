@@ -3,6 +3,8 @@
 
 #include "EnvMap.hpp"
 
+namespace Morph {
+
 // The light source represented by a sphere
 struct LightSource
 {
@@ -62,5 +64,7 @@ public:
   // Only testing routine for debugging
   void testRay(int X, int Y);
 };
+
+}
 
 #endif // RSO_SCENE_HPP

@@ -3,6 +3,8 @@
 
 #include "Material.hpp"
 
+namespace Morph {
+
 // Structure for a ray
 struct Ray
 {
@@ -40,5 +42,7 @@ struct Intersectable
     return 0;
   }
 };
+
+}
 
 #endif // RSO_RAY_HPP

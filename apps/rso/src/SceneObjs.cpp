@@ -3,6 +3,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+namespace Morph {
+
 Rect::Rect(dvec3 _r0, dvec3 _r1, dvec3 _r2, double _width, double _height, Material *mat)
 {
     r0 = _r0;
@@ -123,4 +125,6 @@ void Sphere::sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dve
 double Sphere::pointSampleProb(double totalPower, dvec3 dir)
 {
     return power / totalPower / (4 * radius * radius * M_PI);
+}
+
 }
