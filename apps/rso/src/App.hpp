@@ -26,8 +26,8 @@ private:
     MethodAttacher<KeyEvent, Application> m_keyEventAttacher;
     MethodAttacher<ScrollEvent, Application> m_scrollEventAttacher;
 
-    Scene m_scene;
     JobManager m_jobManager;
+    Scene m_scene;
 
     GraphicsSettings m_graphicsSettings;
     GraphicsSettingsApplier m_graphicsSettingsApplier;

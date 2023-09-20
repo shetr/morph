@@ -34,10 +34,10 @@ struct Sphere : public Intersectable
 
   virtual Hit intersect(const Ray &r) override;
 
-  virtual void samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal);
+  virtual void samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId);
 
   // find a random point with uniform distribution on that half sphere, which can be visible
-  void sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal);
+  void sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId);
 
   virtual double pointSampleProb(double totalPower, dvec3 dir) override;
 };

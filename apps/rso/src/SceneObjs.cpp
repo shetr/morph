@@ -103,18 +103,18 @@ Hit Sphere::intersect(const Ray &r)
     return hit;
 }
 
-void Sphere::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
+void Sphere::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId)
 {
-    return sampleUniformPoint(illuminatedPoint, point, normal);
+    return sampleUniformPoint(illuminatedPoint, point, normal, workerId);
 }
 
-void Sphere::sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
+void Sphere::sampleUniformPoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId)
 {
     normal = dvec3(2);
     while (dot(normal, normal) > 1)
     {
         // uniform in a cube of edge size 2
-        normal = dvec3(Globals::drandom() * 2 - 1, Globals::drandom() * 2 - 1, Globals::drandom() * 2 - 1);
+        normal = dvec3(Globals::drandom(workerId) * 2 - 1, Globals::drandom(workerId) * 2 - 1, Globals::drandom(workerId) * 2 - 1);
         if (dot(illuminatedPoint - center, normal) < 0)
         continue;                      // ignore surely non visible points
     } // finish if the point is in the unit sphere

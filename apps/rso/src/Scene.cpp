@@ -158,54 +158,42 @@ void Scene::render()
 
 void Scene::renderIteration()
 {
-    bool computeLightSamples = Globals::weight > 0;
-    bool computeBRDFSamples = Globals::weight < 1;
-    for (int y = 0; y < Globals::screenSize.y; y++)
+    //printf("%d\r", Globals::currentNumSamples);
+    printf("%d\n", Globals::currentNumSamples);
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    if (!Globals::useMultithreading)
     {
-        printf("%d\r", y);
-        for (int x = 0; x < Globals::screenSize.x; x++)
-        {
-            Ray ray = camera.getRay(x, y);
-            Hit hit = firstIntersect(ray, NULL); // find visible point
-            
-            int sampleMultiplier = 1;
-            dvec3 radiance = dvec3(0);
-            if (hit.t >= 0) {
-                for (int i = 0; i < Globals::samplesPerFrame; i++)
-                {
-                    // The energy emanated from the material
-                    dvec3 radianceEmitted = hit.material->getLe(ray.dir);
-                    if (average(hit.material->diffuseAlbedo) < Globals::epsilon && average(hit.material->specularAlbedo) < Globals::epsilon) {
-                        radiance += radianceEmitted; // if albedo is low, no energy can be reefleted
-                    }
-                    else if (Globals::method == PATH_TRACING) {
-                        radiance += pathTraceSample(ray, hit);
-                    } else {
-                        if (computeLightSamples && computeBRDFSamples) {
-                            sampleMultiplier = 2;
-                        }
-                        if (computeLightSamples) {
-                            radiance += traceLightSample(ray, hit);
-                        }
-                        if (computeBRDFSamples) {
-                            radiance += traceBRDFSample(ray, hit);
-                        }
-                    }
-                }
-            }
-            Globals::radianceAccumulator(x, y) += radiance;
-            int numSamples = Globals::currentNumSamples * sampleMultiplier;
-            Globals::hdrImage(x, y) = Globals::radianceAccumulator(x, y) / (double)numSamples;
-
-            // map HDR to LDR
-            vec3 hdrColor = Globals::hdrImage(x, y);
-            vec3 mapped = vec3(1.0) - glm::exp(-hdrColor * Globals::exposure);
-            // gamma correction 
-            mapped = glm::pow(mapped, vec3(1.0 / Globals::gamma));
-            Globals::ldrImage(x, y) = mapped;
-        }
+        RaytraceJob job(*this, uvec2(0, 0), Globals::screenSize);
+        job.Run();
     }
-    ++Globals::currentNumSamples;
+    else
+    {
+        jobs.clear();
+        int workersCount = jobManager->GetMaxNumberOfWorkers();
+        ivec2 bufferSize = Globals::screenSize;
+
+        int xJobCount = std::min(workersCount, bufferSize.x);
+        int yJobCount = std::min(workersCount, bufferSize.y);
+        int xBlockSize = bufferSize.x / xJobCount;
+        int yBlockSize = bufferSize.y / yJobCount;
+        for (int yJobId = 0; yJobId < yJobCount; ++yJobId) {
+            for (int xJobId = 0; xJobId < xJobCount; ++xJobId) {
+                int fromX = xJobId * xBlockSize;
+                int toX = ((xJobId == xJobCount - 1) ? bufferSize.x : (xJobId + 1) * xBlockSize);
+                int fromY = yJobId * yBlockSize;
+                int toY = ((yJobId == xJobCount - 1) ? bufferSize.y : (yJobId + 1) * yBlockSize);
+                RaytraceJob job(*this, uvec2(fromX, fromY), uvec2(toX, toY));
+                jobs.push_back(job);
+            }
+        }
+        for (RaytraceJob& job: jobs) {
+            jobManager->SubmitJob(&job);
+        }
+        jobManager->WaitForJobsToFinish();
+    }
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+    Globals::currentNumSamples += Globals::samplesPerFrame;
 }
 
 Hit Scene::firstIntersect(const Ray &ray, Intersectable *skip)
@@ -225,11 +213,11 @@ Hit Scene::firstIntersect(const Ray &ray, Intersectable *skip)
     return bestHit;
 }
 
-LightSource Scene::sampleLightSource(const dvec3 &illuminatedPoint) // the 3D point on an object
+LightSource Scene::sampleLightSource(const dvec3 &illuminatedPoint, int workerId) // the 3D point on an object
 {
     while (true)
     { // if no light source is selected due to floating point inaccuracies, repeat
-        double threshold = totalPower * Globals::drandom();
+        double threshold = totalPower * Globals::drandom(workerId);
         double running = 0;
         for (int i = 0; i < objects.size(); i++)
         {
@@ -239,7 +227,7 @@ LightSource Scene::sampleLightSource(const dvec3 &illuminatedPoint) // the 3D po
             Sphere *sphere = (Sphere *)objects[i];
             dvec3 point, normal;
             // select a point on the visible half of the light source
-            ((Sphere *)objects[i])->samplePoint(illuminatedPoint, point, normal);
+            ((Sphere *)objects[i])->samplePoint(illuminatedPoint, point, normal, workerId);
             return LightSource(sphere, point, normal);
         } // if
         }   // for i
@@ -276,7 +264,7 @@ dvec3 Scene::pathTrace(const Ray &primaryRay)
 
     for (int i = 0; i < localSamples; i++)
     {
-        dvec3 radianceTraced = pathTraceSample(primaryRay, primaryHit);
+        dvec3 radianceTraced = pathTraceSample(primaryRay, primaryHit, 0);
         localRadiance += radianceTraced / (double)Globals::nTotalSamples;
     }
     #ifdef ENABLE_MULTITHREADING
@@ -290,7 +278,7 @@ dvec3 Scene::pathTrace(const Ray &primaryRay)
     return radiance;
 }
 
-dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit)
+dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit, int workerId)
 {
     dvec3 radianceTraced(0, 0, 0);
     double factor = 1;
@@ -310,7 +298,7 @@ dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit)
         }
         dvec3 inDir = r.dir * (-1.0); // incident direction
 
-        LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
+        LightSource lightSample = sampleLightSource(hit.position, workerId); // generate a light sample
         dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
         double distance2 = dot(outDir, outDir);
         double distance = sqrt(distance2);
@@ -338,7 +326,7 @@ dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit)
             }
         }
 
-        if (!hit.material->sampleDirection(hit.normal, inDir, outDir))
+        if (!hit.material->sampleDirection(hit.normal, inDir, outDir, workerId))
             break;
         
         double cosThetaSurface = dot(hit.normal, outDir);
@@ -346,7 +334,7 @@ dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit)
             break;
 
         double p = std::min(0.9, average(hit.material->specularAlbedo));
-        double e = Globals::drandom();
+        double e = Globals::drandom(workerId);
         if (e >= p)
             break;
 
@@ -394,7 +382,7 @@ dvec3 Scene::trace(const Ray &r)
         dvec3 localRadianceLightSourceSampling(0);
         for (int i = 0; i < localLighSamples; i++)
         {
-            localRadianceLightSourceSampling += traceLightSample(r, hit) / (double)Globals::nTotalSamples;
+            localRadianceLightSourceSampling += traceLightSample(r, hit, 0) / (double)Globals::nTotalSamples;
         } // for all the samples from light
         #ifdef ENABLE_MULTITHREADING
         #pragma omp critical
@@ -415,7 +403,7 @@ dvec3 Scene::trace(const Ray &r)
         dvec3 localRadianceBRDFSampling(0);
         for (int i = 0; i < localBRDFSamples; i++)
         {
-            localRadianceBRDFSampling += traceBRDFSample(r, hit) / (double)Globals::nTotalSamples;
+            localRadianceBRDFSampling += traceBRDFSample(r, hit, 0) / (double)Globals::nTotalSamples;
         } // for i
         #ifdef ENABLE_MULTITHREADING
         #pragma omp critical
@@ -430,11 +418,11 @@ dvec3 Scene::trace(const Ray &r)
 }
 
 
-dvec3 Scene::traceLightSample(const Ray &r, const Hit& hit)
+dvec3 Scene::traceLightSample(const Ray &r, const Hit& hit, int workerId)
 {
     dvec3 radiance = dvec3(0);
     dvec3 inDir = r.dir * (-1.0); // incident direction
-    LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
+    LightSource lightSample = sampleLightSource(hit.position, workerId); // generate a light sample
     dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
     double distance2 = dot(outDir, outDir);
     double distance = sqrt(distance2);
@@ -466,14 +454,14 @@ dvec3 Scene::traceLightSample(const Ray &r, const Hit& hit)
     return radiance;
 }
 
-dvec3 Scene::traceBRDFSample(const Ray &r, const Hit& hit)
+dvec3 Scene::traceBRDFSample(const Ray &r, const Hit& hit, int workerId)
 {
     dvec3 radiance = dvec3(0);
     dvec3 inDir = r.dir * (-1.0); // incident direction
     // BRDF.cos(theta) sampling should be implemented first!
     dvec3 outDir;
     // BRDF sampling with Russian roulette
-    if (hit.material->sampleDirection(hit.normal, inDir, outDir))
+    if (hit.material->sampleDirection(hit.normal, inDir, outDir, workerId))
     {
         double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
         double cosThetaSurface = dot(hit.normal, outDir);
@@ -513,6 +501,58 @@ void Scene::testRay(int X, int Y)
     nBRDFSamples = nLightSamples = 1000;
     dvec3 current = trace(camera.getRay(X, Y));
     printf("Pixel %d, %d Value = %f, %f, %f\n", X, Y, current.x, current.y, current.z);
+}
+
+void Scene::RaytraceJob::Run()
+{
+    bool computeLightSamples = Globals::weight > 0;
+    bool computeBRDFSamples = Globals::weight < 1;
+    for (int y = _chunkFrom.y; y < _chunkTo.y; y++)
+    {
+        for (int x = _chunkFrom.x; x < _chunkTo.x; x++)
+        {
+            Ray ray = _scene->camera.getRay(x, y);
+            Hit hit = _scene->firstIntersect(ray, NULL); // find visible point
+            
+            int sampleMultiplier = 1;
+            dvec3 radiance = dvec3(0);
+            if (hit.t >= 0) {
+                for (int i = 0; i < Globals::samplesPerFrame; i++)
+                {
+                    // The energy emanated from the material
+                    dvec3 radianceEmitted = hit.material->getLe(ray.dir);
+                    if (average(hit.material->diffuseAlbedo) < Globals::epsilon && average(hit.material->specularAlbedo) < Globals::epsilon) {
+                        radiance += radianceEmitted; // if albedo is low, no energy can be reefleted
+                    }
+                    else if (Globals::method == PATH_TRACING) {
+                        radiance += _scene->pathTraceSample(ray, hit, GetWorkerId());
+                    } else {
+                        if (computeLightSamples && computeBRDFSamples) {
+                            sampleMultiplier = 2;
+                        }
+                        if (computeLightSamples) {
+                            radiance += _scene->traceLightSample(ray, hit, GetWorkerId());
+                        }
+                        if (computeBRDFSamples) {
+                            radiance += _scene->traceBRDFSample(ray, hit, GetWorkerId());
+                        }
+                    }
+                }
+            }
+            Globals::radianceAccumulator(x, y) += radiance;
+            int numSamples = Globals::currentNumSamples * sampleMultiplier;
+            Globals::hdrImage(x, y) = Globals::radianceAccumulator(x, y) / (double)numSamples;
+
+            // map HDR to LDR
+            vec3 hdrColor = Globals::hdrImage(x, y);
+            vec3 mapped = vec3(1.0) - glm::exp(-hdrColor * Globals::exposure);
+            // gamma correction 
+            mapped = glm::pow(mapped, vec3(1.0 / Globals::gamma));
+            Globals::ldrImage(x, y) = mapped;
+        }
+    }
+    
+    //printf("job finished\n");
 }
 
 }

@@ -13,7 +13,7 @@ int Globals::nTotalSamples = 600;
 int Globals::samplesPerFrame = 1;
 int Globals::currentNumSamples = 1;
 Method Globals::method = Method::BRDF;
-bool Globals::useMultithreading = false;
+bool Globals::useMultithreading = true;
 std::vector<RandGen> Globals::randomGenerators;
 const float Globals::pscols[4 * 33] = { // 33 colors RGB
     0, 0.2298057, 0.298717966, 0.753683153, 0.03125, 0.26623388, 0.353094838, 0.801466763,
@@ -51,14 +51,23 @@ void Globals::resize_image(uvec2 _screenSize)
 void Globals::clear()
 {
     srand(1);
-    currentNumSamples = 1;
+    currentNumSamples = samplesPerFrame;
     radianceAccumulator.assign(screenSize, dvec3(0));
 }
 
-double Globals::drandom()
+void Globals::init()
+{
+    srand(1);
+    randomGenerators.clear();
+    for (int i = 0; i < (int)std::thread::hardware_concurrency(); ++i)
+      randomGenerators.push_back(RandGen(i + 1));
+}
+
+double Globals::drandom(int workerId)
 {
     if (useMultithreading) {
-        return randomGenerators[(int)std::thread::hardware_concurrency()].Generate();
+        std::thread::id this_id = std::this_thread::get_id();
+        return randomGenerators[workerId].Generate();
     } else {
         return (double)rand() / RAND_MAX;
     }

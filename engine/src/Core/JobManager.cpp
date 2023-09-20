@@ -7,7 +7,7 @@ JobManager::JobManager()
     _maxWorkers = std::max(1, (int)std::thread::hardware_concurrency());
     _workers.resize(_maxWorkers);
     for (int i = 0; i < _maxWorkers; i++) {
-        _workers[i] = std::thread(&JobManager::WorkerLoop, this);
+        _workers[i] = std::thread(&JobManager::WorkerLoop, this, i);
     }
 }
 
@@ -52,7 +52,7 @@ void JobManager::WaitForJobsToFinish()
     _waitFroJobsToFinishCondVar.wait(lock, [&] { return _jobsInProgress == 0; });
 }
 
-void JobManager::WorkerLoop()
+void JobManager::WorkerLoop(int workerId)
 {
     while (!_shutdown)
     {
@@ -67,7 +67,9 @@ void JobManager::WorkerLoop()
             job = _jobsQueue.front();
             _jobsQueue.pop();
         }
+        job->_workerId = workerId;
         job->Run();
+        job->_workerId = -1;
         job->MarkAsFinished();
         {
             std::unique_lock<std::mutex> lock(_jobsQueueMutex);

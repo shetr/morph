@@ -148,13 +148,13 @@ Hit EnvMap::intersect(const Ray &r)
     return hit;
 }
 
-void EnvMap::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal)
+void EnvMap::samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId)
 {
-    double e1 = Globals::drandom();
+    double e1 = Globals::drandom(workerId);
     double pdfs[2];
     double fx = uDistrib.Sample(e1, &pdfs[0]);
     int x = glm::clamp((int)fx, 0, uDistrib.count-1);
-    double e2 = Globals::drandom();
+    double e2 = Globals::drandom(workerId);
     double fy = vDistribs[x].Sample(e2, &pdfs[1]);
 
     double theta = fy * vDistribs[x].invCount * M_PI;

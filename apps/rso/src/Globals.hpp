@@ -55,8 +55,9 @@ public:
 
     static void resize_image(uvec2 _screenSize);
     static void clear();
+    static void init();
 
-    static double drandom();
+    static double drandom(int workerId);
 };
 
 }

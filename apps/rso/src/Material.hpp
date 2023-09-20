@@ -18,7 +18,7 @@ struct Material
   // Evaluate the BRDF given normal, view direction (outgoing) and light direction (incoming)
   dvec3 BRDF(const dvec3 &N, const dvec3 &V, const dvec3 &L);
   // BRDF.cos(theta) importance sampling for input normal, outgoing direction
-  bool sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L);
+  bool sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L, int workerId);
   // Evaluate the probability given input normal, view (outgoing) direction and incoming light direction
   double sampleProb(const dvec3 &N, const dvec3 &V, const dvec3 &L);
 

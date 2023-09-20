@@ -8,6 +8,7 @@ Application::Application(const WindowAppConfig& config)
     m_windowSizeEventAttacher(&windowManager(), this, &Application::OnWindowSizeEvent),
     m_keyEventAttacher(&windowManager(), this, &Application::OnKeyEvent),
     m_scrollEventAttacher(&windowManager(), this, &Application::OnScrollEvent),
+    m_scene(m_jobManager),
     m_graphicsSettings({
         MultisampleEnabledSetting(true),
         DepthTestEnabledSetting(true),
@@ -31,6 +32,7 @@ Application::Application(const WindowAppConfig& config)
 {
     uvec2 winSize = window().GetSize();
     Globals::resize_image(winSize);
+    Globals::init();
     m_scene.build();
     Globals::method = LIGHT_SOURCE;
     Usage();

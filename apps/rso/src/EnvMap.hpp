@@ -37,7 +37,7 @@ struct EnvMap : public Sphere
 
   Hit intersect(const Ray &r) override;
 
-  void samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal) override;
+  void samplePoint(const dvec3 &illuminatedPoint, dvec3 &point, dvec3 &normal, int workerId) override;
 
   double pointSampleProb(double totalPower, dvec3 dir) override;
 };

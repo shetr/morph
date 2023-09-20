@@ -25,13 +25,13 @@ dvec3 Material::BRDF(const dvec3 &N, const dvec3 &V, const dvec3 &L)
     return brdf + specularAlbedo * ((shininess + 1.0) / 2.0 / M_PI * pow(cosPhi, shininess) / fmax(cosThetaL, cosThetaV));
 }
 
-bool Material::sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L)
+bool Material::sampleDirection(const dvec3 &N, const dvec3 &V, dvec3 &L, int workerId)
 { // output - the incoming light direction
     // To be implemented during exercise 1
     #ifdef USE_CUSTOM_BRDF
         L = dvec3(0, 0, 0);
-        double e1 = Globals::drandom();
-        double e2 = Globals::drandom();
+        double e1 = Globals::drandom(workerId);
+        double e2 = Globals::drandom(workerId);
 
         double avgDiffAlbedo = average(diffuseAlbedo);
         if (e1 < avgDiffAlbedo) // sample diffuse

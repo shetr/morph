@@ -17,10 +17,12 @@ public:
     virtual void Run() = 0;
 
     bool IsFinished() const { return _isFinished; }
+    int GetWorkerId() const { return _workerId; }
 private:
     void MarkAsFinished() { _isFinished = true; }
 
     bool _isFinished = false;
+    int _workerId = -1;
 };
 
 class JobManager
@@ -35,7 +37,7 @@ public:
     void SubmitJobs(Job* jobBegin, Job* jobEnd);
     void WaitForJobsToFinish();
 private:
-    void WorkerLoop();
+    void WorkerLoop(int workerId);
 
     int _maxWorkers = 1;
     std::vector<std::thread> _workers;
