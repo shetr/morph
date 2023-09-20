@@ -10,6 +10,8 @@ const double Globals::epsilon = 1e-9;
 const int Globals::rainbowPSC = 0;
 const int Globals::showBargraph = 1;
 int Globals::nTotalSamples = 600;
+int Globals::samplesPerFrame = 1;
+int Globals::currentNumSamples = 1;
 Method Globals::method = Method::BRDF;
 bool Globals::useMultithreading = false;
 std::vector<RandGen> Globals::randomGenerators;
@@ -33,15 +35,24 @@ const float Globals::pscols[4 * 33] = { // 33 colors RGB
     1.0, 0.705673158, 0.01555616, 0.150232812
 };
 uvec2 Globals::screenSize = uvec2(600, 600);
-vector2d<vec3> Globals::image;
+vector2d<dvec3> Globals::radianceAccumulator;
+vector2d<vec3> Globals::hdrImage;
 vector2d<vec3> Globals::ldrImage;
 float Globals::weight = 0;
 
 void Globals::resize_image(uvec2 _screenSize)
 {
     screenSize = _screenSize;
-    image.assign(screenSize, vec3(0));
+    radianceAccumulator.assign(screenSize, dvec3(0));
+    hdrImage.assign(screenSize, vec3(0));
     ldrImage.assign(screenSize, vec3(0));
+}
+
+void Globals::clear()
+{
+    srand(1);
+    currentNumSamples = 1;
+    radianceAccumulator.assign(screenSize, dvec3(0));
 }
 
 double Globals::drandom()

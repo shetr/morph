@@ -38,6 +38,7 @@ Application::Application(const WindowAppConfig& config)
 
 void Application::RunFrame(f64 lastIterTime, f64 lastFrameTime)
 {
+    m_scene.renderIteration();
     m_screenTexture.Update(Globals::ldrImage.data());
     FramebufferBinder framebufferBinder = context().BindFramebuffer(context().GetDefaultFramebuffer());
     framebufferBinder.Clear();
@@ -74,31 +75,36 @@ void Application::OnKeyEvent(const KeyEvent& event)
             Globals::method = LIGHT_SOURCE;
             Globals::weight = 1;
             printf("Light source sampling\n");
-            m_scene.render();
+            //m_scene.render();
+            Globals::clear();
             break;
         case Key::B:
             Globals::method = BRDF;
             Globals::weight = 0;
             printf("BRDF sampling\n");
-            m_scene.render();
+            //m_scene.render();
+            Globals::clear();
             break;
         case Key::H:
             Globals::method = HALF_WEIGHT;
             Globals::weight = 0.5;
             printf("half weight sampling\n");
-            m_scene.render();
+            //m_scene.render();
+            Globals::clear();
             break;
         case Key::M:
             Globals::method = MULTIPLE_IMPORTANCE;
             Globals::weight = 0.5;
             printf("Multiple importance sampling\n");
-            m_scene.render();
+            //m_scene.render();
+            Globals::clear();
             break;
         case Key::P:
             Globals::method = PATH_TRACING;
             Globals::weight = 1;
             printf("Path tracing\n");
-            m_scene.render();
+            //m_scene.render();
+            Globals::clear();
             break;
         case Key::W:
         {
@@ -106,7 +112,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
             FILE *refImage = fopen("image.bin", "wb");
             if (refImage)
             {
-            fwrite(Globals::image.data(), sizeof(vec3), Globals::screenSize.x * Globals::screenSize.y, refImage);
+            fwrite(Globals::hdrImage.data(), sizeof(vec3), Globals::screenSize.x * Globals::screenSize.y, refImage);
             fclose(refImage);
             }
         }
@@ -138,7 +144,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
             if (event.ModKeyPressed(ModKey::SHIFT)) {
                 psf = true;
             }
-            SaveHDR(filename, Globals::image.data(), Globals::screenSize.x, Globals::screenSize.y, psf);
+            SaveHDR(filename, Globals::hdrImage.data(), Globals::screenSize.x, Globals::screenSize.y, psf);
             break;
         }
         case Key::G:
@@ -172,7 +178,7 @@ void Application::OnKeyEvent(const KeyEvent& event)
                 std::string outFile = inHdr + "_" + methodNames[m] + samplesString + ".hdr";
                 Globals::method = methods[m];
                 m_scene.render();
-                SaveHDR(outFile.c_str(), Globals::image.data(), Globals::screenSize.x, Globals::screenSize.y, false);
+                SaveHDR(outFile.c_str(), Globals::hdrImage.data(), Globals::screenSize.x, Globals::screenSize.y, false);
             }
             }
             Globals::nTotalSamples = oldSamples;

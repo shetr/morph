@@ -39,6 +39,8 @@ public:
     static const int showBargraph;  // 0/1 .. dont use/use bargraph on the right for color mapping
 
     static int nTotalSamples; // samples in one render iteration - should be even number
+    static int samplesPerFrame;
+    static int currentNumSamples;
 
     static Method method;
 
@@ -46,11 +48,13 @@ public:
     static std::vector<RandGen> randomGenerators;
     static const float pscols[4 * 33];
     static uvec2 screenSize;
-    static vector2d<vec3> image;
+    static vector2d<dvec3> radianceAccumulator;
+    static vector2d<vec3> hdrImage;
     static vector2d<vec3> ldrImage;
     static float weight;
 
     static void resize_image(uvec2 _screenSize);
+    static void clear();
 
     static double drandom();
 };

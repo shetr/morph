@@ -117,7 +117,6 @@ void Scene::build(const char* hdrFilename)
 
 void Scene::render()
 {
-    // Total number of samples per pixel is: nIterators*nTotalSamples
     #ifdef ENABLE_MULTITHREADING
     g_randomGenerators.clear();
     for (int i = 0; i < omp_get_max_threads(); ++i)
@@ -128,10 +127,10 @@ void Scene::render()
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     for (int y = 0; y < Globals::screenSize.y; y++)
-    { // for all rows
+    {
         printf("%d\r", y);
         for (int x = 0; x < Globals::screenSize.x; x++)
-        { // for all pixels in a row
+        {
             nLightSamples = (int)(Globals::weight * Globals::nTotalSamples + 0.5);
             nBRDFSamples = Globals::nTotalSamples - nLightSamples;
 
@@ -142,20 +141,72 @@ void Scene::render()
             } else {
                 color = trace(camera.getRay(x, y));
             }
-            Globals::image(x, y) = color;
+            Globals::hdrImage(x, y) = color;
 
             // map HDR to LDR
-            vec3 hdrColor = Globals::image(x, y);
+            vec3 hdrColor = Globals::hdrImage(x, y);
             vec3 mapped = vec3(1.0) - glm::exp(-hdrColor * Globals::exposure);
             // gamma correction 
             mapped = glm::pow(mapped, vec3(1.0 / Globals::gamma));
             Globals::ldrImage(x, y) = mapped;
-        } // for X
+        }
     }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
     std::cout << "Took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 } // render
+
+void Scene::renderIteration()
+{
+    bool computeLightSamples = Globals::weight > 0;
+    bool computeBRDFSamples = Globals::weight < 1;
+    for (int y = 0; y < Globals::screenSize.y; y++)
+    {
+        printf("%d\r", y);
+        for (int x = 0; x < Globals::screenSize.x; x++)
+        {
+            Ray ray = camera.getRay(x, y);
+            Hit hit = firstIntersect(ray, NULL); // find visible point
+            
+            int sampleMultiplier = 1;
+            dvec3 radiance = dvec3(0);
+            if (hit.t >= 0) {
+                for (int i = 0; i < Globals::samplesPerFrame; i++)
+                {
+                    // The energy emanated from the material
+                    dvec3 radianceEmitted = hit.material->getLe(ray.dir);
+                    if (average(hit.material->diffuseAlbedo) < Globals::epsilon && average(hit.material->specularAlbedo) < Globals::epsilon) {
+                        radiance += radianceEmitted; // if albedo is low, no energy can be reefleted
+                    }
+                    else if (Globals::method == PATH_TRACING) {
+                        radiance += pathTraceSample(ray, hit);
+                    } else {
+                        if (computeLightSamples && computeBRDFSamples) {
+                            sampleMultiplier = 2;
+                        }
+                        if (computeLightSamples) {
+                            radiance += traceLightSample(ray, hit);
+                        }
+                        if (computeBRDFSamples) {
+                            radiance += traceBRDFSample(ray, hit);
+                        }
+                    }
+                }
+            }
+            Globals::radianceAccumulator(x, y) += radiance;
+            int numSamples = Globals::currentNumSamples * sampleMultiplier;
+            Globals::hdrImage(x, y) = Globals::radianceAccumulator(x, y) / (double)numSamples;
+
+            // map HDR to LDR
+            vec3 hdrColor = Globals::hdrImage(x, y);
+            vec3 mapped = vec3(1.0) - glm::exp(-hdrColor * Globals::exposure);
+            // gamma correction 
+            mapped = glm::pow(mapped, vec3(1.0 / Globals::gamma));
+            Globals::ldrImage(x, y) = mapped;
+        }
+    }
+    ++Globals::currentNumSamples;
+}
 
 Hit Scene::firstIntersect(const Ray &ray, Intersectable *skip)
 {
@@ -319,7 +370,6 @@ dvec3 Scene::trace(const Ray &r)
         return radianceEmitted; // if albedo is low, no energy can be reefleted
     // Compute the contribution of reflected lgiht
     dvec3 radianceBRDFSampling(0, 0, 0), radianceLightSourceSampling(0, 0, 0);
-    dvec3 inDir = r.dir * (-1.0); // incident direction
 
     int localLighSamples = nLightSamples;
     int localBRDFSamples = nBRDFSamples;

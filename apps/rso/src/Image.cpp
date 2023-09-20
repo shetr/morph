@@ -286,9 +286,9 @@ void SaveTGA()
       double r, g, b;
       if (X < Globals::screenSize.x)
       {
-        r = Globals::image(X, Y).x;
-        g = Globals::image(X, Y).y;
-        b = Globals::image(X, Y).z;
+        r = Globals::hdrImage(X, Y).x;
+        g = Globals::hdrImage(X, Y).y;
+        b = Globals::hdrImage(X, Y).z;
       }
       else
       {

@@ -49,6 +49,7 @@ public:
 
   // Render the scene
   void render();
+  void renderIteration();
 
   // Compute intersection between a rady and primitive
   Hit firstIntersect(const Ray &ray, Intersectable *skip);
