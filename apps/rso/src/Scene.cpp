@@ -104,9 +104,9 @@ void Scene::build(const char* hdrFilename)
     objects.clear();
     // Create a simple scene
 
-    //buildHw1_3Test();
+    buildHw1_3Test();
     //buildHw2Test(hdrFilename);
-    buildHw4Test(hdrFilename);
+    //buildHw4Test(hdrFilename);
 
     totalPower = 0;
     for (int i = 0; i < objects.size(); i++)

@@ -35,8 +35,6 @@ public:
     static float gamma;
     static float exposure;
     static const double epsilon;
-    static const int rainbowPSC;    // 0 .. use CoolWarm mapping, 1 .. use rainbow color mapping
-    static const int showBargraph;  // 0/1 .. dont use/use bargraph on the right for color mapping
 
     static int nTotalSamples; // samples in one render iteration - should be even number
     static int samplesPerFrame;
@@ -46,7 +44,6 @@ public:
 
     static bool useMultithreading;
     static std::vector<RandGen> randomGenerators;
-    static const float pscols[4 * 33];
     static uvec2 screenSize;
     static vector2d<dvec3> radianceAccumulator;
     static vector2d<vec3> hdrImage;

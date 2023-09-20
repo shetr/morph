@@ -122,68 +122,34 @@ void Application::OnKeyEvent(const KeyEvent& event)
         {
             printf("Writing output HDR file (extension .hdr)\n");
             FILE *fp;
-            const char* filename = "test.hdr";
+            const char* hdrFilename = "test.hdr";
+            const char* tgaFilename = "test.tga";
             switch (Globals::method)
             {
                 case LIGHT_SOURCE:
-                filename = "lightsource.hdr";
+                hdrFilename = "lightsource.hdr";
+                tgaFilename = "lightsource.tga";
                 break;
                 case BRDF:
-                filename = "brdf.hdr";
+                hdrFilename = "brdf.hdr";
+                tgaFilename = "brdf.tga";
                 break;
                 case HALF_WEIGHT:
-                filename = "half_weight.hdr";
+                hdrFilename = "half_weight.hdr";
+                tgaFilename = "half_weight.tga";
                 break;
                 case MULTIPLE_IMPORTANCE:
-                filename = "multiple_importance.hdr";
+                hdrFilename = "multiple_importance.hdr";
+                tgaFilename = "multiple_importance.tga";
                 break;
                 case PATH_TRACING:
-                filename = "path_tracing.hdr";
+                hdrFilename = "path_tracing.hdr";
+                tgaFilename = "path_tracing.tga";
                 break;
             }
-            bool psf = false;
-            
-            if (event.ModKeyPressed(ModKey::SHIFT)) {
-                psf = true;
-            }
-            SaveHDR(filename, Globals::hdrImage.data(), Globals::screenSize.x, Globals::screenSize.y, psf);
-            break;
-        }
-        case Key::G:
-        {
-            printf("generate for multiple instances\n");
-            std::vector<std::string> hdrFiles = {
-            "raw015",
-            "raw024",
-            "raw023",
-            "raw020",
-            //"raw004",
-            "raw007",
-            //"raw010",
-            //"raw011",
-            "raw013",
-            "raw001",
-            "raw016"
-            };
-            std::vector<Method> methods = { LIGHT_SOURCE, BRDF, MULTIPLE_IMPORTANCE };
-            std::vector<std::string> methodNames = { "lightsource", "brdf", "multiple_importance" };
-            int oldSamples = Globals::nTotalSamples;
-            int samples = 12000;
-            Globals::nTotalSamples = samples;
-            std::string samplesString = std::to_string(samples);
-            for (const std::string& inHdr : hdrFiles)
-            {
-            std::string inFile = inHdr + ".hdr";
-            m_scene.build(inFile.c_str());
-            for (int m = 0; m < (int)methods.size(); ++m)
-            {
-                std::string outFile = inHdr + "_" + methodNames[m] + samplesString + ".hdr";
-                Globals::method = methods[m];
-                m_scene.render();
-                SaveHDR(outFile.c_str(), Globals::hdrImage.data(), Globals::screenSize.x, Globals::screenSize.y, false);
-            }
-            }
-            Globals::nTotalSamples = oldSamples;
+
+            SaveHDR(hdrFilename, Globals::hdrImage);
+            SaveTGA(tgaFilename, Globals::hdrImage);
             break;
         }
         } // switch (key)

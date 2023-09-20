@@ -9,74 +9,6 @@ double average(dvec3 v)
   return dot(v, dvec3(1)) / 3.0;
 }
 
-void getPseudocolorRainbow(double val, double minVal, double maxVal, double &r, double &g, double &b)
-{
-  if (isnan(val) || isinf(val))
-  {
-    r = g = b = 0; // black ... exception
-    return;
-  }
-  if (val < minVal)
-    val = minVal;
-  if (val > maxVal)
-    val = maxVal;
-  double ratio = (val - minVal) / (maxVal - minVal);
-  double value = 1.0f - ratio;
-  float val4 = value * 4.0f;
-  value = val4 - (int)val4;
-  switch ((int)(val4))
-  {
-  case 0:
-    r = 1.0;
-    g = value;
-    b = 0.f;
-    break;
-  case 1:
-    r = 1.0 - value;
-    g = 1.0;
-    b = 0.f;
-    break;
-  case 2:
-    r = 0.f;
-    g = 1.0;
-    b = value;
-    break;
-  case 3:
-    r = 0.f;
-    g = 1.0 - value;
-    b = 1.0;
-    break;
-  default:
-    r = value * 1.0;
-    g = 0.f;
-    b = 1.0;
-    break;
-  }
-  return;
-}
-
-void getPseudocolorCoolWarm(double val, double minVal, double maxVal, double &r, double &g, double &b)
-{
-  if (isnan(val) || isinf(val))
-  {
-    r = g = b = 0; // black ... exception
-    return;
-  }
-  if (val < minVal)
-    val = minVal;
-  if (val > maxVal)
-    val = maxVal;
-  double ratio = (val - minVal) / (maxVal - minVal);
-  int i = int(ratio * 31.999);
-  assert(i < 33);
-  assert(i >= 0);
-  float alpha = i + 1.0 - (ratio * 31.999);
-  r = Globals::pscols[4 * i + 1] * alpha + Globals::pscols[4 * (i + 1) + 1] * (1.0 - alpha);
-  g = Globals::pscols[4 * i + 2] * alpha + Globals::pscols[4 * (i + 1) + 2] * (1.0 - alpha);
-  b = Globals::pscols[4 * i + 3] * alpha + Globals::pscols[4 * (i + 1) + 3] * (1.0 - alpha);
-  // printf("rgb=%f %f %f index=%d a=%g\n",r,g,b,i, alpha);
-}
-
 Image ReadHDR(const char* filename)
 {
     FILE *fp;
@@ -148,43 +80,21 @@ Image ReadHDR(const char* filename)
     return {image, width, height};
 }
 
-void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf)
+void SaveHDR(const char* filename, const vector2d<vec3>& inImage)
 {
   FILE *fp;
   fp = fopen(filename, "wb");
-  if (psf)
-  {
-    width *= 2;
-  }
   if (fp)
   {
-    size_t nmemb = width * height;
+    size_t nmemb = inImage.size();
     RGBE *data = new RGBE[nmemb];
     for (int ii = 0; ii < nmemb; ii++)
     {
       RGBE &rgbe = data[ii];
-      int x = (ii % width);
-      int y = height - (ii / width) - 1;
+      int x = (ii % inImage.dim().x);
+      int y = inImage.dim().y - (ii / inImage.dim().x) - 1;
       dvec3 vv;
-      vv = inImage[y * width + x];
-      if (psf)
-      {
-        if (x < width)
-        {
-          vv = inImage[y * width + x];
-        }
-        else
-        {
-          x -= width;
-          double w = Globals::weight;
-          if (Globals::showBargraph && (x > 0.98 * width))
-            w = (double)y / height; // thin bar on the right showing the mapping
-          if (Globals::rainbowPSC)
-            getPseudocolorRainbow(w, 0.0, 1.0, vv.x, vv.y, vv.z); // is more common but wrong perceptually
-          else
-            getPseudocolorCoolWarm(w, 0.0, 1.0, vv.x, vv.y, vv.z); // is perceptually better
-        }
-      }
+      vv = inImage(x, y);
       float v;
       int e;
       v = vv.x;
@@ -225,7 +135,7 @@ void SaveHDR(const char* filename, const vec3* inImage, int width, int height, b
     {
       abort();
     }
-    if (fprintf(fp, "-Y %d +X %d\n", height, width) < 0)
+    if (fprintf(fp, "-Y %d +X %d\n", inImage.dim().y, inImage.dim().x) < 0)
     {
       abort();
     }
@@ -242,25 +152,11 @@ void SaveHDR(const char* filename, const vec3* inImage, int width, int height, b
   }
 }
 
-void SaveTGA()
+void SaveTGA(const char* filename, const vector2d<vec3>& inImage)
 {
   // Save TGA file for the image, simple format
   FILE *ofile = 0;
-  switch (Globals::method)
-  {
-  case BRDF:
-    ofile = fopen("brdf.tga", "wb");
-    break;
-  case LIGHT_SOURCE:
-    ofile = fopen("lightsource.tga", "wb");
-    break;
-  case HALF_WEIGHT:
-    ofile = fopen("half_weight.tga", "wb");
-    break;
-  case MULTIPLE_IMPORTANCE:
-    ofile = fopen("multiple_importance.tga", "wb");
-    break;
-  }
+  ofile = fopen(filename, "wb");
   if (!ofile)
     return;
 
@@ -271,36 +167,21 @@ void SaveTGA()
   {
     fputc(0, ofile);
   }
-  int width = Globals::screenSize.x * 2, height = Globals::screenSize.y;
-  fputc(width % 256, ofile);
-  fputc(width / 256, ofile);
-  fputc(height % 256, ofile);
-  fputc(height / 256, ofile);
+  fputc(inImage.dim().x % 256, ofile);
+  fputc(inImage.dim().x / 256, ofile);
+  fputc(inImage.dim().y % 256, ofile);
+  fputc(inImage.dim().y / 256, ofile);
   fputc(24, ofile);
   fputc(32, ofile);
 
-  for (int Y = Globals::screenSize.y - 1; Y >= 0; Y--)
+  for (int y = inImage.dim().y - 1; y >= 0; y--)
   {
-    for (int X = 0; X < width; X++)
+    for (int x = 0; x < inImage.dim().x; x++)
     {
       double r, g, b;
-      if (X < Globals::screenSize.x)
-      {
-        r = Globals::hdrImage(X, Y).x;
-        g = Globals::hdrImage(X, Y).y;
-        b = Globals::hdrImage(X, Y).z;
-      }
-      else
-      {
-        int XX = X - Globals::screenSize.x;
-        double w = Globals::weight;
-        if (Globals::showBargraph && (XX > 0.98 * Globals::screenSize.x))
-          w = (double)Y / Globals::screenSize.y; // thin bar on the right showing the mapping
-        if (Globals::rainbowPSC)
-          getPseudocolorRainbow(w, 0.0, 1.0, r, g, b); // is more common but wrong perceptually
-        else
-          getPseudocolorCoolWarm(w, 0.0, 1.0, r, g, b); // is perceptually better
-      }
+      r = inImage(x, y).x;
+      g = inImage(x, y).y;
+      b = inImage(x, y).z;
       int R = fmax(fmin(r * 255.5, 255), 0);
       int G = fmax(fmin(g * 255.5, 255), 0);
       int B = fmax(fmin(b * 255.5, 255), 0);

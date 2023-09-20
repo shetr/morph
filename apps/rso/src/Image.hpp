@@ -19,15 +19,11 @@ struct Image
   int height;
 };
 
-void getPseudocolorRainbow(double val, double minVal, double maxVal, double &r, double &g, double &b);
-
-void getPseudocolorCoolWarm(double val, double minVal, double maxVal, double &r, double &g, double &b);
-
 Image ReadHDR(const char* filename);
 
-void SaveHDR(const char* filename, const vec3* inImage, int width, int height, bool psf = false);
+void SaveHDR(const char* filename, const vector2d<vec3>& inImage);
 
-void SaveTGA();
+void SaveTGA(const char* filename, const vector2d<vec3>& inImage);
 
 }
 
