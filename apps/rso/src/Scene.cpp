@@ -225,12 +225,28 @@ dvec3 Scene::pathTrace(const Ray &primaryRay)
 
     for (int i = 0; i < localSamples; i++)
     {
-        dvec3 radianceTraced(0, 0, 0);
-        double factor = 1;
-        Ray r = primaryRay;
-        Intersectable* ignore = nullptr;
-        while(true)
-        {
+        dvec3 radianceTraced = pathTraceSample(primaryRay, primaryHit);
+        localRadiance += radianceTraced / (double)Globals::nTotalSamples;
+    }
+    #ifdef ENABLE_MULTITHREADING
+    #pragma omp critical
+    radiance += localRadiance;
+    }
+    #else
+    radiance += localRadiance;
+    #endif
+
+    return radiance;
+}
+
+dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit)
+{
+    dvec3 radianceTraced(0, 0, 0);
+    double factor = 1;
+    Ray r = primaryRay;
+    Intersectable* ignore = nullptr;
+    while(true)
+    {
         Hit hit = firstIntersect(r, ignore);
         if (hit.t < 0)
             break;
@@ -286,18 +302,8 @@ dvec3 Scene::pathTrace(const Ray &primaryRay)
         r = Ray(hit.position, outDir);
         ignore = hit.object;
         factor *= 0.5;
-        }
-        localRadiance += radianceTraced / (double)Globals::nTotalSamples;
     }
-    #ifdef ENABLE_MULTITHREADING
-    #pragma omp critical
-    radiance += localRadiance;
-    }
-    #else
-    radiance += localRadiance;
-    #endif
-
-    return radiance;
+    return radianceTraced;
 }
 
 dvec3 Scene::trace(const Ray &r)
@@ -338,37 +344,7 @@ dvec3 Scene::trace(const Ray &r)
         dvec3 localRadianceLightSourceSampling(0);
         for (int i = 0; i < localLighSamples; i++)
         {
-        LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
-        dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
-        double distance2 = dot(outDir, outDir);
-        double distance = sqrt(distance2);
-        if (distance >= Globals::epsilon)
-        {
-            outDir = outDir / distance; // normalize the direction
-            double cosThetaLight = dot(lightSample.normal, outDir * (-1.0));
-            if (cosThetaLight > Globals::epsilon)
-            {
-            // visibility is not needed to handle, all lights are visible
-            double pdfLightSourceSampling =
-                lightSample.sphere->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
-            double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
-            // the theta angle on the surface between normal and light direction
-            double cosThetaSurface = dot(hit.normal, outDir);
-            if (cosThetaSurface > 0)
-            {
-                // yes, the light is visible and contributes to the output power
-                // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                dvec3 f = lightSample.sphere->material->getLe(outDir) *
-                        hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
-                double p = pdfLightSourceSampling;
-                if (Globals::method == MULTIPLE_IMPORTANCE) {
-                p += pdfBRDFSampling;
-                }
-                // importance sample = 1/n . \sum (f/prob)
-                localRadianceLightSourceSampling += f / p / (double)Globals::nTotalSamples;
-            } // if
-            }
-        }
+            localRadianceLightSourceSampling += traceLightSample(r, hit) / (double)Globals::nTotalSamples;
         } // for all the samples from light
         #ifdef ENABLE_MULTITHREADING
         #pragma omp critical
@@ -389,15 +365,70 @@ dvec3 Scene::trace(const Ray &r)
         dvec3 localRadianceBRDFSampling(0);
         for (int i = 0; i < localBRDFSamples; i++)
         {
-        // BRDF.cos(theta) sampling should be implemented first!
-        dvec3 outDir;
-        // BRDF sampling with Russian roulette
-        if (hit.material->sampleDirection(hit.normal, inDir, outDir))
+            localRadianceBRDFSampling += traceBRDFSample(r, hit) / (double)Globals::nTotalSamples;
+        } // for i
+        #ifdef ENABLE_MULTITHREADING
+        #pragma omp critical
+        radianceBRDFSampling += localRadianceBRDFSampling;
+        }
+        #else
+        radianceBRDFSampling += localRadianceBRDFSampling;
+        #endif
+    }
+
+    return radianceEmitted + radianceLightSourceSampling + radianceBRDFSampling;
+}
+
+
+dvec3 Scene::traceLightSample(const Ray &r, const Hit& hit)
+{
+    dvec3 radiance = dvec3(0);
+    dvec3 inDir = r.dir * (-1.0); // incident direction
+    LightSource lightSample = sampleLightSource(hit.position); // generate a light sample
+    dvec3 outDir = lightSample.point - hit.position;            // compute direction towards sample
+    double distance2 = dot(outDir, outDir);
+    double distance = sqrt(distance2);
+    if (distance >= Globals::epsilon)
+    {
+        outDir = outDir / distance; // normalize the direction
+        double cosThetaLight = dot(lightSample.normal, outDir * (-1.0));
+        if (cosThetaLight > Globals::epsilon)
         {
+            // visibility is not needed to handle, all lights are visible
+            double pdfLightSourceSampling = lightSample.sphere->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
             double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
+            // the theta angle on the surface between normal and light direction
             double cosThetaSurface = dot(hit.normal, outDir);
             if (cosThetaSurface > 0)
             {
+                // yes, the light is visible and contributes to the output power
+                // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
+                dvec3 f = lightSample.sphere->material->getLe(outDir) * hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
+                double p = pdfLightSourceSampling;
+                if (Globals::method == MULTIPLE_IMPORTANCE) {
+                    p += pdfBRDFSampling;
+                }
+                // importance sample = 1/n . \sum (f/prob)
+                radiance = f / p;
+            } // if
+        }
+    }
+    return radiance;
+}
+
+dvec3 Scene::traceBRDFSample(const Ray &r, const Hit& hit)
+{
+    dvec3 radiance = dvec3(0);
+    dvec3 inDir = r.dir * (-1.0); // incident direction
+    // BRDF.cos(theta) sampling should be implemented first!
+    dvec3 outDir;
+    // BRDF sampling with Russian roulette
+    if (hit.material->sampleDirection(hit.normal, inDir, outDir))
+    {
+        double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
+        double cosThetaSurface = dot(hit.normal, outDir);
+        if (cosThetaSurface > 0)
+        {
             dvec3 brdf = hit.material->BRDF(hit.normal, inDir, outDir);
             // Trace a ray to the scene
             Hit lightSource = firstIntersect(Ray(hit.position, outDir), hit.object);
@@ -410,32 +441,21 @@ dvec3 Scene::trace(const Ray &r)
                 double cosThetaLight = dot(lightSource.normal, outDir * (-1.0));
                 if (cosThetaLight > Globals::epsilon)
                 {
-                double pdfLightSourceSampling =
-                    lightSource.object->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
-                // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                dvec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
-                double p = pdfBRDFSampling;
-                if (Globals::method == MULTIPLE_IMPORTANCE) {
-                    p += pdfLightSourceSampling;
-                }
-                localRadianceBRDFSampling += f / p / (double)Globals::nTotalSamples;
+                    double pdfLightSourceSampling = lightSource.object->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
+                    // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
+                    dvec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
+                    double p = pdfBRDFSampling;
+                    if (Globals::method == MULTIPLE_IMPORTANCE) {
+                        p += pdfLightSourceSampling;
+                    }
+                    radiance = f / p;
                 }
                 else
-                printf("ERROR: Sphere hit from back\n");
-            }
+                    printf("ERROR: Sphere hit from back\n");
             }
         }
-        } // for i
-        #ifdef ENABLE_MULTITHREADING
-        #pragma omp critical
-        radianceBRDFSampling += localRadianceBRDFSampling;
-        }
-        #else
-        radianceBRDFSampling += localRadianceBRDFSampling;
-        #endif
     }
-
-    return radianceEmitted + radianceLightSourceSampling + radianceBRDFSampling;
+    return radiance;
 }
 
 void Scene::testRay(int X, int Y)

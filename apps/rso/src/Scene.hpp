@@ -58,8 +58,14 @@ public:
 
   dvec3 pathTrace(const Ray &primaryRay);
 
+  dvec3 pathTraceSample(const Ray &primaryRay, const Hit& primaryHit);
+
   // Trace a primary ray towards the scene
   dvec3 trace(const Ray &r);
+
+  dvec3 traceLightSample(const Ray &r, const Hit& hit);
+
+  dvec3 traceBRDFSample(const Ray &r, const Hit& hit);
 
   // Only testing routine for debugging
   void testRay(int X, int Y);
