@@ -174,7 +174,7 @@ void SaveHDR(const char* filename, const vec3* inImage, int width, int height, b
         else
         {
           x -= width;
-          double w = Globals::weight.data()[y * width + x];
+          double w = Globals::weight;
           if (Globals::showBargraph && (x > 0.98 * width))
             w = (double)y / height; // thin bar on the right showing the mapping
           if (Globals::rainbowPSC)
@@ -291,7 +291,7 @@ void SaveTGA()
       else
       {
         int XX = X - Globals::screenWidth;
-        double w = Globals::weight[Y * Globals::screenWidth + XX];
+        double w = Globals::weight;
         if (Globals::showBargraph && (XX > 0.98 * Globals::screenWidth))
           w = (double)Y / Globals::screenHeight; // thin bar on the right showing the mapping
         if (Globals::rainbowPSC)

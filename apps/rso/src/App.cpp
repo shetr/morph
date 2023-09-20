@@ -72,26 +72,31 @@ void Application::OnKeyEvent(const KeyEvent& event)
         {
         case Key::L:
             Globals::method = LIGHT_SOURCE;
+            Globals::weight = 1;
             printf("Light source sampling\n");
             m_scene.render();
             break;
         case Key::B:
             Globals::method = BRDF;
+            Globals::weight = 0;
             printf("BRDF sampling\n");
             m_scene.render();
             break;
         case Key::H:
             Globals::method = HALF_WEIGHT;
+            Globals::weight = 0.5;
             printf("half weight sampling\n");
             m_scene.render();
             break;
         case Key::M:
             Globals::method = MULTIPLE_IMPORTANCE;
+            Globals::weight = 0.5;
             printf("Multiple importance sampling\n");
             m_scene.render();
             break;
         case Key::P:
             Globals::method = PATH_TRACING;
+            Globals::weight = 1;
             printf("Path tracing\n");
             m_scene.render();
             break;
@@ -134,15 +139,6 @@ void Application::OnKeyEvent(const KeyEvent& event)
                 psf = true;
             }
             SaveHDR(filename, Globals::image.data(), Globals::screenWidth, Globals::screenHeight, psf);
-            break;
-        }
-        case Key::T:
-        {
-            printf("testing things\n");
-            //Image image = ReadHDR("raw001.hdr");
-            //SaveHDR("test.hdr", image.data.data(), image.width, image.height, false);
-            //GenerateSimpleHDR();
-            SaveHDR("test.hdr", Globals::testImage.data(), Globals::screenWidth, Globals::screenHeight, false);
             break;
         }
         case Key::G:

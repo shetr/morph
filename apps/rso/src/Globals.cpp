@@ -7,11 +7,7 @@ float Globals::exposure = 1.0;
 const double Globals::epsilon = 1e-9;
 const int Globals::rainbowPSC = 0;
 const int Globals::showBargraph = 1;
-int Globals::nIterations = 2;
 int Globals::nTotalSamples = 600;
-double Globals::costBRDF = 1.0;
-double Globals::costLight = 1.0;
-double Globals::referenceEfficiency = 1.0;
 Method Globals::method = Method::BRDF;
 bool Globals::useMultithreading = false;
 std::vector<RandGen> Globals::randomGenerators;
@@ -38,9 +34,7 @@ int Globals::screenWidth = 600;
 int Globals::screenHeight = 600;
 std::vector<vec3> Globals::image;
 std::vector<vec3> Globals::ldrImage;
-std::vector<vec3> Globals::testImage;
-std::vector<vec3> Globals::reference;
-std::vector<float> Globals::weight;
+float Globals::weight = 0;
 
 void Globals::resize_image(int _screenWidth, int _screenHeight)
 {
@@ -48,9 +42,6 @@ void Globals::resize_image(int _screenWidth, int _screenHeight)
     screenHeight = _screenHeight;
     image.assign(screenWidth * screenHeight, vec3(0));
     ldrImage.assign(screenWidth * screenHeight, vec3(0));
-    testImage.assign(screenWidth * screenHeight, vec3(0));
-    reference.assign(screenWidth * screenHeight, vec3(0));
-    weight.assign(screenWidth * screenHeight, 0);
 }
 
 double Globals::drandom()

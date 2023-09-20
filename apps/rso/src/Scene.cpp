@@ -113,13 +113,6 @@ void Scene::build(const char* hdrFilename)
     }
 }
 
-void Scene::setWeight(double wval)
-{
-    for (int Y = 0; Y < Globals::screenHeight; Y++)
-        for (int X = 0; X < Globals::screenWidth; X++)
-        Globals::weight[Y * Globals::screenWidth + X] = wval;
-}
-
 void Scene::render()
 {
     // Total number of samples per pixel is: nIterators*nTotalSamples
@@ -130,92 +123,33 @@ void Scene::render()
     #else
     srand(1);
     #endif
-    char buffer[100];
-    FILE *errorFile = 0;
-
-    switch (Globals::method)
-    {
-    case BRDF:
-        nBRDFSamples = Globals::nTotalSamples;
-        nLightSamples = 0;
-        errorFile = fopen("BRDF.txt", "w");
-        setWeight(0);
-        break;
-    case LIGHT_SOURCE:
-        nBRDFSamples = 0;
-        nLightSamples = Globals::nTotalSamples;
-        errorFile = fopen("light.txt", "w");
-        setWeight(1.0);
-        break;
-    case HALF_WEIGHT:
-        errorFile = fopen("light.txt", "w");
-        setWeight(0.5);
-        break;
-    case MULTIPLE_IMPORTANCE:
-        errorFile = fopen("light.txt", "w");
-        setWeight(0.5);
-        break;
-    case PATH_TRACING:
-        errorFile = fopen("light.txt", "w");
-        setWeight(1.0);
-        break;
-    } // switch
-
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    double cost = 0;
-    bool debug = false;
-    // How many iterations
-    for (int iIter = 1; iIter <= Globals::nIterations; iIter++)
-    {
-        double error = 0;
-        for (int Y = 0; Y < Globals::screenHeight; Y++)
-        { // for all rows
-        printf("%d\r", Y);
-        for (int X = 0; X < Globals::screenWidth; X++)
+    for (int y = 0; y < Globals::screenHeight; y++)
+    { // for all rows
+        printf("%d\r", y);
+        for (int x = 0; x < Globals::screenWidth; x++)
         { // for all pixels in a row
-            if (debug)
-            { // debug particular pixel x,y, coordinates from pfsv (pfstools)
-            X = 441;
-            Y = Globals::screenHeight - 529;
-            }
-
-            nLightSamples = (int)(Globals::weight[Y * Globals::screenWidth + X] * Globals::nTotalSamples + 0.5);
+            nLightSamples = (int)(Globals::weight * Globals::nTotalSamples + 0.5);
             nBRDFSamples = Globals::nTotalSamples - nLightSamples;
-            cost += nBRDFSamples * Globals::costBRDF + nLightSamples * Globals::costLight;
 
-            // For a primary ray at pixel (X,Y) compute the color
+            // For a primary ray at pixel (x,y) compute the color
             dvec3 color = dvec3(0);
             if (Globals::method == PATH_TRACING) {
-            color = pathTrace(camera.getRay(X, Y));
+                color = pathTrace(camera.getRay(x, y));
             } else {
-            color = trace(camera.getRay(X, Y));
+                color = trace(camera.getRay(x, y));
             }
-            double w = 1.0 / iIter; // the same weight for all samples for computing mean incrementally
-            Globals::image[Y * Globals::screenWidth + X] = color * w + dvec3(Globals::image[Y * Globals::screenWidth + X]) * (1.0 - w);
+            Globals::image[y * Globals::screenWidth + x] = color;
 
             // map HDR to LDR
-            vec3 hdrColor = Globals::image[Y * Globals::screenWidth + X];
+            vec3 hdrColor = Globals::image[y * Globals::screenWidth + x];
             vec3 mapped = vec3(1.0) - exp(-hdrColor * Globals::exposure);
             // gamma correction 
             mapped = pow(mapped, vec3(1.0 / Globals::gamma));
-            Globals::ldrImage[Y * Globals::screenWidth + X] = mapped;
-
-            w = 1.0 / sqrt(iIter); // emphasize later samples
-            dvec3 diff = Globals::reference[Y * Globals::screenWidth + X] - Globals::image[Y * Globals::screenWidth + X];
-            error += dot(diff, diff);
-            if (debug)
-            break;
+            Globals::ldrImage[y * Globals::screenWidth + x] = mapped;
         } // for X
-        if (debug)
-            break;
-        } // for Y
-        double eff = 100000.0 * Globals::nIterations * Globals::nTotalSamples * Globals::screenWidth * Globals::screenHeight / error / cost;
-        printf("Iter: %d, Error: %4.2f, Efficiency: %f, Relative Efficiency: %f\n",
-                iIter, sqrt(error), eff, eff / Globals::referenceEfficiency);
-        fprintf(errorFile, "%d, %f\n", iIter * Globals::nTotalSamples, sqrt(error));
-    } // for iTer
-    fclose(errorFile);
+    }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
     std::cout << "Took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;

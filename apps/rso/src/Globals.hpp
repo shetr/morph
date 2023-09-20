@@ -39,13 +39,7 @@ public:
     static const int rainbowPSC;    // 0 .. use CoolWarm mapping, 1 .. use rainbow color mapping
     static const int showBargraph;  // 0/1 .. dont use/use bargraph on the right for color mapping
 
-    static int nIterations;    // how many iterations to render
     static int nTotalSamples; // samples in one render iteration - should be even number
-
-    // The cost of sampling - should be measured and set
-    static double costBRDF;
-    static double costLight;
-    static double referenceEfficiency;
 
     static Method method;
 
@@ -56,9 +50,7 @@ public:
     static int screenHeight;
     static std::vector<vec3> image;
     static std::vector<vec3> ldrImage;
-    static std::vector<vec3> testImage;
-    static std::vector<vec3> reference;
-    static std::vector<float> weight;
+    static float weight;
 
     static void resize_image(int _screenWidth, int _screenHeight);
 

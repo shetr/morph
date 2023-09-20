@@ -45,9 +45,6 @@ public:
 
   void build(const char* hdrFilename = "raw013.hdr");
 
-  // Set the weight for the sampling method
-  void setWeight(double wval);
-
   // Render the scene
   void render();
 
