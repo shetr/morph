@@ -104,9 +104,9 @@ void Scene::build(const char* hdrFilename)
     objects.clear();
     // Create a simple scene
 
-    buildHw1_3Test();
+    //buildHw1_3Test();
     //buildHw2Test(hdrFilename);
-    //buildHw4Test(hdrFilename);
+    buildHw4Test(hdrFilename);
 
     totalPower = 0;
     for (int i = 0; i < objects.size(); i++)
@@ -284,8 +284,13 @@ dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit, int w
     double factor = 1;
     Ray r = primaryRay;
     Intersectable* ignore = nullptr;
+    int depth = 0;
     while(true)
     {
+        if (depth > 8) {
+            break;
+        }
+
         Hit hit = firstIntersect(r, ignore);
         if (hit.t < 0)
             break;
@@ -308,39 +313,66 @@ dvec3 Scene::pathTraceSample(const Ray &primaryRay, const Hit& primaryHit, int w
             double cosThetaLight = dot(lightSample.normal, outDir * (-1.0));
             if (cosThetaLight > Globals::epsilon)
             {
-            // visibility is not needed to handle, all lights are visible
-            double pdfLightSourceSampling =
-                lightSample.sphere->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
-            // the theta angle on the surface between normal and light direction
-            double cosThetaSurface = dot(hit.normal, outDir);
-            if (cosThetaSurface > 0)
-            {
-                // yes, the light is visible and contributes to the output power
-                // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
-                dvec3 f = lightSample.sphere->material->getLe(outDir) *
-                        hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
-                double p = pdfLightSourceSampling;
-                // importance sample = 1/n . \sum (f/prob)
-                radianceTraced += 0.5 * factor * f / p;
-            } // if
+                // visibility is not needed to handle, all lights are visible
+                double pdfLightSourceSampling = lightSample.sphere->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
+                double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
+                // the theta angle on the surface between normal and light direction
+                double cosThetaSurface = dot(hit.normal, outDir);
+                if (cosThetaSurface > 0)
+                {
+                    // yes, the light is visible and contributes to the output power
+                    // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
+                    dvec3 f = lightSample.sphere->material->getLe(outDir) *
+                            hit.material->BRDF(hit.normal, inDir, outDir) * cosThetaSurface;
+                    double p = pdfLightSourceSampling + pdfBRDFSampling;
+                    // importance sample = 1/n . \sum (f/prob)
+                    radianceTraced += 0.5 * factor * f / p;
+                } // if
             }
         }
-
-        if (!hit.material->sampleDirection(hit.normal, inDir, outDir, workerId))
-            break;
         
+        outDir = dvec3(0);
+        // BRDF sampling with Russian roulette
+        if (!hit.material->sampleDirection(hit.normal, inDir, outDir, workerId)) {
+            break;
+        }
+        double pdfBRDFSampling = hit.material->sampleProb(hit.normal, inDir, outDir);
         double cosThetaSurface = dot(hit.normal, outDir);
-        if (cosThetaSurface <= 0)
+        if (cosThetaSurface <= 0) {
             break;
+        }
+        dvec3 brdf = hit.material->BRDF(hit.normal, inDir, outDir);
+        // Trace a ray to the scene
+        Hit lightSource = firstIntersect(Ray(hit.position, outDir), hit.object);
+        // Do we hit a light source
+        if (lightSource.t > 0 && average(lightSource.material->getLe(outDir)) > 0)
+        {
+            dvec3 dirToLight = lightSource.position - hit.position;
+            // squared distance between an illuminated point and light source
+            double distance2 = dot(dirToLight, dirToLight);
+            double cosThetaLight = dot(lightSource.normal, outDir * (-1.0));
+            if (cosThetaLight > Globals::epsilon)
+            {
+                double pdfLightSourceSampling = lightSource.object->pointSampleProb(totalPower, outDir) * distance2 / cosThetaLight;
+                // The evaluation of rendering equation locally: (light power) * brdf * cos(theta)
+                dvec3 f = lightSource.material->getLe(outDir) * brdf * cosThetaSurface;
+                double p = pdfBRDFSampling + pdfLightSourceSampling;
+                radianceTraced += 0.5 * factor * f / p;
+            }
+            else
+                printf("ERROR: Sphere hit from back\n");
+        } else {
+            double continueProb = std::min(0.9, average(hit.material->specularAlbedo));
+            double e = Globals::drandom(workerId);
+            if (e >= continueProb)
+                break;
 
-        double p = std::min(0.9, average(hit.material->specularAlbedo));
-        double e = Globals::drandom(workerId);
-        if (e >= p)
-            break;
+            r = Ray(hit.position, outDir);
+            ignore = hit.object;
+            factor *= 0.5;
+        }
 
-        r = Ray(hit.position, outDir);
-        ignore = hit.object;
-        factor *= 0.5;
+        depth++;
     }
     return radianceTraced;
 }
@@ -459,7 +491,7 @@ dvec3 Scene::traceBRDFSample(const Ray &r, const Hit& hit, int workerId)
     dvec3 radiance = dvec3(0);
     dvec3 inDir = r.dir * (-1.0); // incident direction
     // BRDF.cos(theta) sampling should be implemented first!
-    dvec3 outDir;
+    dvec3 outDir = dvec3(0);
     // BRDF sampling with Russian roulette
     if (hit.material->sampleDirection(hit.normal, inDir, outDir, workerId))
     {
